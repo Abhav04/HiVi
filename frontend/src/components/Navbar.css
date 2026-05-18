@@ -1,0 +1,240 @@
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  padding: 0 40px;
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  background: transparent;
+}
+
+.navbar.scrolled {
+  background: rgba(8, 8, 8, 0.92);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border);
+  padding: 0 40px;
+}
+
+.navbar-inner {
+  max-width: 1400px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  height: 72px;
+  gap: 48px;
+}
+
+/* Logo */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+
+.logo-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-text {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: var(--white);
+  margin-top: 1px;
+}
+
+/* Nav Links */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: 36px;
+  flex: 1;
+}
+
+.nav-link {
+  position: relative;
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 1.5px;
+  color: var(--muted2);
+  text-transform: lowercase;
+  transition: color var(--transition);
+  text-decoration: none;
+}
+
+.nav-link span {
+  position: relative;
+}
+
+.nav-link span::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--gold);
+  transition: width 0.3s ease;
+}
+
+.nav-link:hover {
+  color: var(--white);
+}
+
+.nav-link:hover span::after,
+.nav-link.active span::after {
+  width: 100%;
+}
+
+.nav-link.active {
+  color: var(--gold);
+}
+
+/* CTA */
+.navbar-cta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-left: auto;
+}
+
+.btn-ghost {
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--muted2);
+  text-transform: lowercase;
+  border: 1px solid var(--border2);
+  border-radius: var(--radius);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-ghost:hover {
+  color: var(--white);
+  border-color: var(--muted);
+}
+
+.btn-gold {
+  padding: 8px 20px;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1.5px;
+  color: var(--black);
+  text-transform: lowercase;
+  background: var(--gold);
+  border: 1px solid var(--gold);
+  border-radius: var(--radius);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-gold:hover {
+  background: var(--gold2);
+  border-color: var(--gold2);
+  transform: translateY(-1px);
+  box-shadow: 0 8px 24px rgba(201, 168, 76, 0.25);
+}
+
+/* Hamburger */
+.hamburger {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  width: 32px;
+  height: 32px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  margin-left: auto;
+  padding: 4px;
+}
+
+.hamburger span {
+  display: block;
+  width: 100%;
+  height: 1px;
+  background: var(--muted2);
+  transition: all 0.3s ease;
+  transform-origin: center;
+}
+
+.hamburger.open span:nth-child(1) {
+  transform: translateY(6px) rotate(45deg);
+}
+.hamburger.open span:nth-child(2) {
+  opacity: 0;
+}
+.hamburger.open span:nth-child(3) {
+  transform: translateY(-6px) rotate(-45deg);
+}
+
+/* Mobile Menu */
+.mobile-menu {
+  display: none;
+  flex-direction: column;
+  gap: 0;
+  background: rgba(8, 8, 8, 0.98);
+  border-top: 1px solid var(--border);
+  padding: 0;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.4s ease, padding 0.4s ease;
+}
+
+.mobile-menu.open {
+  padding: 24px 0;
+  max-height: 400px;
+}
+
+.mobile-link {
+  display: block;
+  padding: 14px 40px;
+  font-size: 13px;
+  letter-spacing: 1.5px;
+  color: var(--muted2);
+  text-transform: lowercase;
+  border-bottom: 1px solid var(--border);
+  transition: color 0.2s ease;
+  text-decoration: none;
+}
+
+.mobile-link:hover {
+  color: var(--gold);
+}
+
+.mobile-cta {
+  display: flex;
+  gap: 12px;
+  padding: 20px 40px 0;
+}
+
+@media (max-width: 900px) {
+  .navbar-links,
+  .navbar-cta {
+    display: none;
+  }
+  .hamburger {
+    display: flex;
+  }
+  .mobile-menu {
+    display: flex;
+  }
+  .navbar {
+    padding: 0 24px;
+  }
+  .navbar.scrolled {
+    padding: 0 24px;
+  }
+}

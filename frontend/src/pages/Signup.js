@@ -276,8 +276,8 @@ const Signup = () => {
 
                 <p className="terms-note">
                   by creating an account, you agree to our{' '}
-                  <a href="#" className="auth-link">terms of service</a> and{' '}
-                  <a href="#" className="auth-link">privacy policy</a>
+                 <button className="auth-link">terms of service</button>
+<button className="auth-link">privacy policy</button>
                 </p>
 
                 <button

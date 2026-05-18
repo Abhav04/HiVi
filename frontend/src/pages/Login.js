@@ -8,9 +8,7 @@ const Login = () => {
     window.location.href = "http://localhost:8080/oauth2/authorization/google";
   };
 
-  const handleAppleLogin = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/apple";
-  };
+
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);

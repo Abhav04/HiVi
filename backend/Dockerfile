@@ -34,7 +34,7 @@ FROM deps as package
 
 WORKDIR /build
 
-COPY . src/
+COPY . .
 RUN --mount=type=bind,source=pom.xml,target=pom.xml \
     --mount=type=cache,target=/root/.m2 \
     ./mvnw package -DskipTests && \

@@ -1,13 +1,19 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { getApiUrl, getUser, saveUser, nameFromEmail } from '../utils/auth';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
-   const handleGoogleLogin = () => {
-    window.location.href = "http://localhost:8080/oauth2/authorization/google";
+  const apiUrl = getApiUrl();
+
+  const handleGoogleLogin = () => {
+    window.location.href = `${apiUrl}/oauth2/authorization/google`;
   };
 
+  const handleGithubLogin = () => {
+    window.location.href = `${apiUrl}/oauth2/authorization/github`;
+  };
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -34,6 +40,21 @@ const Login = () => {
     setLoading(true);
     await new Promise(r => setTimeout(r, 1800));
     setLoading(false);
+
+    const existing = getUser();
+    const name =
+      existing?.email === form.email && existing?.name
+        ? existing.name
+        : nameFromEmail(form.email);
+
+    saveUser({
+      name,
+      email: form.email,
+      role: existing?.email === form.email ? existing.role : 'client',
+      provider: 'local',
+      projects: existing?.email === form.email ? existing.projects ?? [] : [],
+    });
+
     navigate('/dashboard');
   };
 
@@ -176,11 +197,11 @@ const Login = () => {
                 </svg>
                 Google
               </button>
-              <button className="oauth-btn">
+              <button type="button" className="oauth-btn" onClick={handleGithubLogin}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M16.365 1.43c0 1.14-.493 2.27-1.177 3.08-.744.9-1.99 1.57-2.987 1.57-.12 0-.23-.02-.3-.03-.01-.06-.04-.22-.04-.39 0-1.15.572-2.27 1.206-2.98.804-.94 2.142-1.64 3.248-1.68.03.13.05.28.05.43zm4.565 15.71c-.03.07-.463 1.58-1.518 3.12-.945 1.34-1.94 2.71-3.43 2.71-1.517 0-1.9-.88-3.63-.88-1.698 0-2.302.91-3.67.91-1.377 0-2.332-1.26-3.428-2.8-1.287-1.82-2.323-4.63-2.323-7.28 0-3.55 2.488-5.43 4.936-5.43 1.518 0 2.802.9 3.722.9.896 0 2.297-1.02 4.01-1.02.65 0 2.497.06 3.785 1.43zm-2.73-15.73c-.744.9-2.274 1.8-3.276 1.8-.1 0-.2-.02-.28-.04-.01-.08-.03-.19-.03-.32 0-1.08.6-2.25 1.285-3.03.717-.83 2.012-1.53 3.023-1.57.01.1.03.23.03.37 0 1.06-.48 2.18-1.18 2.97l.43-.18z"/>
+                  <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/>
                 </svg>
-                Apple
+                GitHub
               </button>
             </div>
           </div>

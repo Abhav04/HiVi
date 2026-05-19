@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { saveUser } from '../utils/auth';
 import './Auth.css';
 
 const Signup = () => {
@@ -34,6 +35,15 @@ const Signup = () => {
     setLoading(true);
     await new Promise(r => setTimeout(r, 2000));
     setLoading(false);
+
+    saveUser({
+      name: form.name.trim(),
+      email: form.email,
+      role: role || 'client',
+      provider: 'local',
+      projects: [],
+    });
+
     navigate('/dashboard');
   };
 
@@ -276,8 +286,8 @@ const Signup = () => {
 
                 <p className="terms-note">
                   by creating an account, you agree to our{' '}
-                 <button className="auth-link">terms of service</button>
-<button className="auth-link">privacy policy</button>
+                  <button type="button" className="auth-link">terms of service</button> and{' '}
+                  <button type="button" className="auth-link">privacy policy</button>
                 </p>
 
                 <button

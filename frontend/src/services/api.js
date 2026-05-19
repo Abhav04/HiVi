@@ -1,7 +1,8 @@
-import axios from "axios";
+import axios from 'axios';
+import { getApiUrl } from '../utils/auth';
 
 const API = axios.create({
-  baseURL: "http://localhost:8080", // backend URL
+  baseURL: getApiUrl(),
 });
 
 export default API;

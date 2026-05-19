@@ -4,6 +4,7 @@ import com.oauth.demo.jwt.filter.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -19,8 +20,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import javax.sql.DataSource;
-
 @Configuration
 @EnableMethodSecurity
 @EnableWebSecurity
@@ -49,9 +48,14 @@ public class SecurityConfig {
         this.successHandler = successHandler;
     }
     @Bean
+<<<<<<< HEAD
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
 
         http.securityMatcher("/**");
+=======
+    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, Environment env) throws Exception {
+
+>>>>>>> b7b61c1 (fix render production config)
         http.cors(cors -> {});
         http.csrf(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
@@ -76,15 +80,22 @@ public class SecurityConfig {
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
         );
-        http.oauth2Login(oauth2 ->
-                oauth2.successHandler(successHandler)
-        );
+        if (isOAuthConfigured(env)) {
+            http.oauth2Login(oauth2 -> oauth2.successHandler(successHandler));
+        }
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         http.addFilterBefore(authenticationJwtTokenFilter,
                 UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
+    }
+
+    private boolean isOAuthConfigured(Environment env) {
+        String googleId = env.getProperty("spring.security.oauth2.client.registration.google.client-id", "");
+        String githubId = env.getProperty("spring.security.oauth2.client.registration.github.client-id", "");
+        return (!googleId.isBlank() && !"YOUR_CLIENT_ID".equals(googleId))
+                || (!githubId.isBlank() && !"YOUR_CLIENT_ID".equals(githubId));
     }
 
 }

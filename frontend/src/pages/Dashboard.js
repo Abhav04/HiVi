@@ -1,16 +1,10 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import { getUser, clearUser, getInitials, getFirstName, getLastName } from '../utils/auth';
 import './Dashboard.css';
 
 const tabs = ['overview', 'projects', 'messages', 'earnings', 'profile'];
-
-const recentProjects = [
-  { id: 1, title: 'Brand Film — Artisanal Coffee Co.', editor: 'Aryan Kapoor', status: 'in progress', due: 'Apr 8', amount: '₹18,000', progress: 65 },
-  { id: 2, title: 'YouTube Series — Ep 12-15', editor: 'Priya Sharma', status: 'review', due: 'Apr 5', amount: '₹9,500', progress: 90 },
-  { id: 3, title: 'Wedding Highlight Reel', editor: 'Zara Nair', status: 'completed', due: 'Apr 1', amount: '₹24,000', progress: 100 },
-  { id: 4, title: 'Product Launch TVC', editor: 'Chen Wei', status: 'pending', due: 'Apr 15', amount: '₹45,000', progress: 10 },
-];
 
 const statusColors = {
   'completed': { color: '#27ae60', bg: 'rgba(39,174,96,0.1)' },
@@ -20,22 +14,49 @@ const statusColors = {
 };
 
 const Dashboard = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
+  const user = getUser() || { name: 'Guest', email: '', role: 'client', projects: [] };
+
+  const firstName = getFirstName(user.name);
+  const lastName = getLastName(user.name);
+  const initials = getInitials(user.name);
+  const projects = user.projects || [];
+  const isNewUser = projects.length === 0;
+  const roleLabel = user.role === 'editor' ? 'editor account' : 'client account';
+
+  const handleSignOut = () => {
+    clearUser();
+    navigate('/');
+  };
+
+  const stats = isNewUser
+    ? [
+        { label: 'active projects', value: '0', sub: 'post your first project', pos: null },
+        { label: 'total spent', value: '₹0', sub: 'no projects yet', pos: null },
+        { label: 'avg. rating given', value: '—', sub: 'complete a project first', pos: null },
+        { label: 'editors worked with', value: '0', sub: 'find an editor to start', pos: null },
+      ]
+    : [
+        { label: 'active projects', value: '3', sub: '+1 this week', pos: true },
+        { label: 'total spent', value: '₹96,500', sub: 'across 12 projects', pos: null },
+        { label: 'avg. rating given', value: '4.8★', sub: 'above platform avg.', pos: true },
+        { label: 'editors worked with', value: '7', sub: '3 recurring', pos: null },
+      ];
 
   return (
     <div className="dashboard">
       <Navbar />
 
       <div className="dashboard-inner">
-        {/* Sidebar */}
         <aside className="dash-sidebar">
           <div className="dash-user animate-fadeUp">
-            <div className="dash-avatar">RK</div>
+            <div className="dash-avatar">{initials}</div>
             <div>
-              <div className="dash-name">Rahul Kumar</div>
+              <div className="dash-name">{user.name}</div>
               <div className="dash-role">
                 <span className="dash-dot" />
-                client account
+                {roleLabel}
               </div>
             </div>
           </div>
@@ -55,7 +76,7 @@ const Dashboard = () => {
                   {tab === 'profile' && <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>}
                 </span>
                 {tab}
-                {tab === 'messages' && <span className="dash-badge">3</span>}
+                {tab === 'messages' && !isNewUser && <span className="dash-badge">3</span>}
               </button>
             ))}
           </nav>
@@ -67,38 +88,32 @@ const Dashboard = () => {
               </svg>
               browse editors
             </Link>
-            <Link to="/" className="dash-logout">
+            <button type="button" className="dash-logout" onClick={handleSignOut}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/>
               </svg>
               sign out
-            </Link>
+            </button>
           </div>
         </aside>
 
-        {/* Main content */}
         <main className="dash-main">
           {activeTab === 'overview' && (
             <>
-              {/* Greeting */}
               <div className="dash-greeting animate-fadeUp">
                 <div>
                   <p className="dash-eyebrow">good morning</p>
-                  <h1 className="dash-headline">Rahul <em>Kumar</em></h1>
+                  <h1 className="dash-headline">
+                    {firstName}{lastName ? <> <em>{lastName}</em></> : null}
+                  </h1>
                 </div>
                 <Link to="/feed" className="cta-new-project">
                   + new project
                 </Link>
               </div>
 
-              {/* Stats */}
               <div className="dash-stats animate-fadeUp delay-1">
-                {[
-                  { label: 'active projects', value: '3', sub: '+1 this week', pos: true },
-                  { label: 'total spent', value: '₹96,500', sub: 'across 12 projects', pos: null },
-                  { label: 'avg. rating given', value: '4.8★', sub: 'above platform avg.', pos: true },
-                  { label: 'editors worked with', value: '7', sub: '3 recurring', pos: null },
-                ].map((s, i) => (
+                {stats.map((s, i) => (
                   <div key={i} className="dash-stat">
                     <span className="ds-label">{s.label}</span>
                     <span className="ds-value">{s.value}</span>
@@ -107,56 +122,70 @@ const Dashboard = () => {
                 ))}
               </div>
 
-              {/* Recent Projects */}
               <div className="dash-section animate-fadeUp delay-2">
                 <div className="dash-section-header">
                   <h2 className="dash-section-title">recent projects</h2>
-                  <button className="dash-section-action" onClick={() => setActiveTab('projects')}>
-                    view all →
-                  </button>
+                  {!isNewUser && (
+                    <button className="dash-section-action" onClick={() => setActiveTab('projects')}>
+                      view all →
+                    </button>
+                  )}
                 </div>
 
-                <div className="projects-table">
-                  <div className="pt-head">
-                    <span>project</span>
-                    <span>editor</span>
-                    <span>status</span>
-                    <span>due</span>
-                    <span>amount</span>
-                  </div>
-                  {recentProjects.map(p => (
-                    <div key={p.id} className="pt-row">
-                      <div className="pt-title">
-                        <span>{p.title}</span>
-                        <div className="pt-progress-wrap">
-                          <div className="pt-progress-bar" style={{ width: `${p.progress}%` }} />
-                        </div>
-                      </div>
-                      <div className="pt-editor">{p.editor}</div>
-                      <div>
-                        <span
-                          className="pt-status"
-                          style={{ color: statusColors[p.status]?.color, background: statusColors[p.status]?.bg }}
-                        >
-                          {p.status}
-                        </span>
-                      </div>
-                      <div className="pt-due">{p.due}</div>
-                      <div className="pt-amount">{p.amount}</div>
+                {isNewUser ? (
+                  <div className="projects-empty">
+                    <div className="projects-empty-icon">
+                      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                        <polyline points="14 2 14 8 20 8"/>
+                      </svg>
                     </div>
-                  ))}
-                </div>
+                    <p className="projects-empty-title">no projects yet</p>
+                    <p className="projects-empty-sub">post your first project to connect with top editors</p>
+                    <Link to="/feed" className="projects-empty-cta">browse editors →</Link>
+                  </div>
+                ) : (
+                  <div className="projects-table">
+                    <div className="pt-head">
+                      <span>project</span>
+                      <span>editor</span>
+                      <span>status</span>
+                      <span>due</span>
+                      <span>amount</span>
+                    </div>
+                    {projects.map(p => (
+                      <div key={p.id} className="pt-row">
+                        <div className="pt-title">
+                          <span>{p.title}</span>
+                          <div className="pt-progress-wrap">
+                            <div className="pt-progress-bar" style={{ width: `${p.progress}%` }} />
+                          </div>
+                        </div>
+                        <div className="pt-editor">{p.editor}</div>
+                        <div>
+                          <span
+                            className="pt-status"
+                            style={{ color: statusColors[p.status]?.color, background: statusColors[p.status]?.bg }}
+                          >
+                            {p.status}
+                          </span>
+                        </div>
+                        <div className="pt-due">{p.due}</div>
+                        <div className="pt-amount">{p.amount}</div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* Quick actions */}
               <div className="dash-section animate-fadeUp delay-3">
                 <h2 className="dash-section-title" style={{ marginBottom: 16 }}>quick actions</h2>
                 <div className="quick-actions">
                   {[
-                    { icon: '🎬', label: 'post a project', sub: 'find your next editor', link: '/feed' },
-                    { icon: '📁', label: 'view all projects', sub: `${recentProjects.length} total projects`, action: () => setActiveTab('projects') },
-                    { icon: '💬', label: 'check messages', sub: '3 unread messages', action: () => setActiveTab('messages') },
-                    { icon: '⭐', label: 'leave a review', sub: 'for completed projects', action: () => {} },
+                    { icon: '🎬', label: 'post a project', sub: 'find your next editor', action: () => navigate('/feed') },
+                    { icon: '📁', label: 'view all projects', sub: isNewUser ? 'no projects yet' : `${projects.length} total projects`, action: () => setActiveTab('projects') },
+                    { icon: '💬', label: 'check messages', sub: isNewUser ? 'no messages yet' : '3 unread messages', action: () => setActiveTab('messages') },
+                    { icon: '⭐', label: 'leave a review', sub: isNewUser ? 'complete a project first' : 'for completed projects', action: () => {} },
                   ].map((a, i) => (
                     <div key={i} className="quick-action-card" onClick={a.action}>
                       <span className="qa-icon">{a.icon}</span>

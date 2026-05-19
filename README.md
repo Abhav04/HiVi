@@ -4,7 +4,9 @@ Hivi is a full-stack microservices-based platform built using **Spring Boot**, *
 The project focuses on scalable backend architecture, secure authentication, and modern frontend integration.
 
 ---
+## 🌐 Live Demo
 
+🔗 [Visit Hivi](https://hi-vi.vercel.app)
 # ✨ Features
 
 ## 🔐 Authentication & Security

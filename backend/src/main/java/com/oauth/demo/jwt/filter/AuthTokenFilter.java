@@ -39,14 +39,16 @@ public class AuthTokenFilter extends OncePerRequestFilter {//this class is used 
         String path = request.getServletPath();
         System.out.println("Request Path: " + path);
         // Skip JWT validation for public endpoints
-        if (path.startsWith("/user/signup") ||
-                path.startsWith("/user/signin") ||
+        if (path.startsWith("/auth") ||
+                path.startsWith("/user/signup") ||   // ✅ ADD THIS
+                path.startsWith("/user/signin") ||   // ✅ ADD THIS
                 path.startsWith("/oauth2") ||
                 path.startsWith("/login/oauth2")) {
-
             filterChain.doFilter(request, response);
             return;
+
         }
+
 
         logger.debug("AuthTokenFilter called for URI: {}", request.getRequestURI());
 

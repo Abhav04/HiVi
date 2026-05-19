@@ -21,7 +21,7 @@ public class User {
     private String provider; // LOCAL or GOOGLE
     private String role;
     @Column(nullable = false)
-    private boolean enabled = false;
+    private Boolean enabled = false;
 
     private String verificationToken;
     public User() {}

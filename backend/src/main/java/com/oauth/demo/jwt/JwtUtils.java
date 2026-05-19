@@ -45,20 +45,18 @@ public class JwtUtils {
         String username = userDetails.getUsername();
 
         return Jwts.builder()
-                .subject(username)
-                .issuedAt(new Date())
-                .expiration(
-                        new Date((new Date()).getTime() + jwtExpirationMs)
-                )
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
                 .compact();
     }
     public String generateTokenFromUsername(String username) {
 
         return Jwts.builder()
-                .subject(username)
-                .issuedAt(new Date())
-                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .setSubject(username)
+                .setIssuedAt(new Date())
+                .setExpiration(new Date((new Date()).getTime() + jwtExpirationMs))
                 .signWith(key())
                 .compact();
     }
@@ -69,11 +67,11 @@ public class JwtUtils {
         return generateTokenFromUsername(userPrincipal);
     }
     public String getUserNameFromJwtToken(String token) {
-        return Jwts.parser()
-                .verifyWith((SecretKey) key())
+        return Jwts.parserBuilder()
+                .setSigningKey(key())
                 .build()
-                .parseSignedClaims(token)
-                .getPayload()
+                .parseClaimsJws(token)
+                .getBody()
                 .getSubject();
     }
 
@@ -87,11 +85,14 @@ public class JwtUtils {
     public boolean validateJwtToken(String authToken) {
         try {
             System.out.println("Validate");
-            Jwts.parser()
-                    .verifyWith((SecretKey) key())
+
+            Jwts.parserBuilder()
+                    .setSigningKey(key())
                     .build()
-                    .parseSignedClaims(authToken);
+                    .parseClaimsJws(authToken);
+
             return true;
+
         } catch (MalformedJwtException e) {
             logger.error("Invalid JWT token: {}", e.getMessage());
         } catch (ExpiredJwtException e) {
@@ -101,6 +102,7 @@ public class JwtUtils {
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
         }
+
         return false;
     }
 }

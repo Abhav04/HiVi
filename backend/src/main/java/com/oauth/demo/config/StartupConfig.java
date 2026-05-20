@@ -13,7 +13,8 @@ public class StartupConfig {
     private static final Logger log = LoggerFactory.getLogger(StartupConfig.class);
 
     @EventListener(ApplicationReadyEvent.class)
-    public void onReady(Environment env) {
+    public void onReady(ApplicationReadyEvent event) {
+        Environment env = event.getApplicationContext().getEnvironment();
         log.info("Active profiles: {}", String.join(",", env.getActiveProfiles()));
         log.info("Server port: {}", env.getProperty("server.port"));
         log.info("DATABASE_URL set: {}", env.getProperty("DATABASE_URL") != null);

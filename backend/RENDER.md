@@ -18,7 +18,8 @@
 
 | Key | Value |
 |-----|--------|
-| `DATABASE_URL` | **Required.** Link your Postgres DB (Environment → **Add from Database**) — do not leave this empty |
+| `DATABASE_URL` | **Required.** Must start with `postgresql://` (use **Internal** URL from Render, not localhost) |
+| `DB_USERNAME` / `DB_PASSWORD` | Optional fallback if `DATABASE_URL` uses JDBC format without embedded credentials |
 | `SPRING_PROFILES_ACTIVE` | `prod` (also set in Dockerfile; optional to repeat here) |
 | `APP_FRONTEND_URL` | `https://hi-vi.vercel.app` |
 | `JWT_SECRET` | A long random secret string |

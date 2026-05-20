@@ -14,12 +14,10 @@ public class StartupConfig {
 
     @EventListener(ApplicationReadyEvent.class)
     public void onReady(Environment env) {
-        String[] profiles = env.getActiveProfiles();
-        String dbUrl = env.getProperty("spring.datasource.url", "not set");
-        String maskedUrl = dbUrl.replaceAll("://([^:]+):([^@]+)@", "://***:***@");
-        log.info("Started with profiles: {}", profiles.length > 0 ? String.join(",", profiles) : "default");
-        log.info("Datasource URL: {}", maskedUrl);
+        log.info("Active profiles: {}", String.join(",", env.getActiveProfiles()));
         log.info("Server port: {}", env.getProperty("server.port"));
-        log.info("DATABASE_URL present: {}", env.getProperty("DATABASE_URL") != null);
+        log.info("DATABASE_URL set: {}", env.getProperty("DATABASE_URL") != null);
+        log.info("DB_HOST set: {}", env.getProperty("DB_HOST") != null);
+        log.info("DB_USERNAME set: {}", env.getProperty("DB_USERNAME") != null);
     }
 }

@@ -52,10 +52,27 @@ Set in Vercel environment variables:
 REACT_APP_API_URL=https://YOUR-SERVICE.onrender.com
 ```
 
+## Render health check (if deploy times out)
+
+In Render → your Web Service → **Settings** → **Health Check Path**, set:
+
+```
+/health
+```
+
+Or:
+
+```
+/actuator/health
+```
+
+This helps Render detect the port while the app is still starting.
+
 ## Troubleshooting
 
 | Error | Fix |
 |-------|-----|
 | `Connection to localhost:5432 refused` | Set `DATABASE_URL` and `SPRING_PROFILES_ACTIVE=prod` |
+| `No open ports detected` / deploy timed out | Set health check path to `/health`, redeploy; free tier startup can take 2–3 min |
 | `No open ports detected` | App must use `server.port=${PORT}` (already configured) |
 | Redis connection errors | Prod profile disables Redis; ensure `SPRING_PROFILES_ACTIVE=prod` |

@@ -32,7 +32,7 @@ RUN chown appuser:appuser app.jar
 USER appuser
 
 ENV SPRING_PROFILES_ACTIVE=prod
-ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0"
+ENV JAVA_OPTS="-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0 -XX:TieredStopAtLevel=1 -Dspring.jmx.enabled=false"
 
 EXPOSE 8080
 

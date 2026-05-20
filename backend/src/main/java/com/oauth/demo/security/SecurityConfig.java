@@ -73,6 +73,7 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
+                        .requestMatchers("/health", "/actuator/health").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
         );

@@ -12,26 +12,28 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 @Configuration
 @EnableMethodSecurity
 @EnableWebSecurity
 public class SecurityConfig {
 
-
     @Autowired
     private AuthEntryPointJwt unauthorizedHandler;
 
-    // beans
     @Autowired
     private AuthTokenFilter authenticationJwtTokenFilter;
+
+    private final OAuth2LoginSuccessHandler successHandler;
+
+    public SecurityConfig(OAuth2LoginSuccessHandler successHandler) {
+        this.successHandler = successHandler;
+    }
+
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authenticationConfiguration) throws Exception {
@@ -42,20 +44,10 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-    private final OAuth2LoginSuccessHandler successHandler;
 
-    public SecurityConfig(OAuth2LoginSuccessHandler successHandler) {
-        this.successHandler = successHandler;
-    }
     @Bean
-<<<<<<< HEAD
-    SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
-
-        http.securityMatcher("/**");
-=======
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, Environment env) throws Exception {
-
->>>>>>> b7b61c1 (fix render production config)
+        http.securityMatcher("/**");
         http.cors(cors -> {});
         http.csrf(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
@@ -76,13 +68,14 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
-
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
         );
+
         if (isOAuthConfigured(env)) {
             http.oauth2Login(oauth2 -> oauth2.successHandler(successHandler));
         }
+
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));
 
         http.addFilterBefore(authenticationJwtTokenFilter,
@@ -97,5 +90,4 @@ public class SecurityConfig {
         return (!googleId.isBlank() && !"YOUR_CLIENT_ID".equals(googleId))
                 || (!githubId.isBlank() && !"YOUR_CLIENT_ID".equals(githubId));
     }
-
 }

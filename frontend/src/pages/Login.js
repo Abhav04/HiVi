@@ -117,8 +117,10 @@ const Login = () => {
 
           {oauthError && (
             <p className="field-error" style={{ marginBottom: 16 }}>
-              Sign in failed. Check OAuth redirect URLs in Google/GitHub console match{' '}
-              <code>{apiUrl}/login/oauth2/code/google</code> (or github).
+              Sign in failed: {decodeURIComponent(oauthError)}.
+              <br />
+              In Google Cloud Console → Credentials → your OAuth client, set redirect URI to:{' '}
+              <code>{apiUrl}/login/oauth2/code/google</code>
             </p>
           )}
 

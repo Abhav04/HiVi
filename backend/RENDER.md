@@ -37,10 +37,12 @@ This sets `DATABASE_URL` automatically.
 
 ## 5. OAuth redirect URLs
 
-Update Google/GitHub OAuth apps with your Render backend URL:
+Update Google/GitHub OAuth apps with your Render backend URL (exact match required):
 
-- Google redirect: `https://YOUR-SERVICE.onrender.com/login/oauth2/code/google`
-- GitHub redirect: `https://YOUR-SERVICE.onrender.com/login/oauth2/code/github`
+- Google redirect: `https://hivi-idam.onrender.com/login/oauth2/code/google`
+- GitHub redirect: `https://hivi-idam.onrender.com/login/oauth2/code/github`
+
+Render sets `RENDER_EXTERNAL_URL` automatically — the prod profile uses it for OAuth redirects.
 
 ## 6. Vercel frontend
 

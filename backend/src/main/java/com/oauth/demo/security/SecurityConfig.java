@@ -29,9 +29,12 @@ public class SecurityConfig {
     private AuthTokenFilter authenticationJwtTokenFilter;
 
     private final OAuth2LoginSuccessHandler successHandler;
+    private final OAuth2LoginFailureHandler failureHandler;
 
-    public SecurityConfig(OAuth2LoginSuccessHandler successHandler) {
+    public SecurityConfig(OAuth2LoginSuccessHandler successHandler,
+                          OAuth2LoginFailureHandler failureHandler) {
         this.successHandler = successHandler;
+        this.failureHandler = failureHandler;
     }
 
     @Bean
@@ -51,8 +54,9 @@ public class SecurityConfig {
         http.cors(cors -> {});
         http.csrf(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
+        // OAuth2 login needs a session to store the authorization request between redirects
         http.sessionManagement(
-                session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
         );
 
         http.exceptionHandling(exception ->
@@ -65,6 +69,7 @@ public class SecurityConfig {
                         .requestMatchers("/auth/signin").permitAll()
                         .requestMatchers("/auth/signup").permitAll()
                         .requestMatchers("/user/test-user").permitAll()
+                        .requestMatchers("/login", "/login/**").permitAll()
                         .requestMatchers("/login/oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
@@ -73,7 +78,9 @@ public class SecurityConfig {
         );
 
         if (isOAuthConfigured(env)) {
-            http.oauth2Login(oauth2 -> oauth2.successHandler(successHandler));
+            http.oauth2Login(oauth2 -> oauth2
+                    .successHandler(successHandler)
+                    .failureHandler(failureHandler));
         }
 
         http.headers(headers -> headers.frameOptions(frame -> frame.sameOrigin()));

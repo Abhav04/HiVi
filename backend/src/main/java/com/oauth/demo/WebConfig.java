@@ -20,8 +20,8 @@ public class WebConfig {
             public void addCorsMappings(CorsRegistry registry) {
 
                 registry.addMapping("/**")
-                        .allowedOrigins("http://localhost:3000", frontendUrl)
-                        .allowedMethods("GET","POST","PUT","DELETE","OPTIONS")
+                        .allowedOriginPatterns("http://localhost:3000", "http://localhost:5173", frontendUrl, "https://*.vercel.app")
+                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
 

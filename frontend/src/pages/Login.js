@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { getApiUrl, getUser, saveUser, nameFromEmail } from '../utils/auth';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const oauthError = searchParams.get('error');
   const apiUrl = getApiUrl();
 
   const handleGoogleLogin = () => {
@@ -112,6 +114,13 @@ const Login = () => {
               <Link to="/signup" className="auth-link">create an account →</Link>
             </p>
           </div>
+
+          {oauthError && (
+            <p className="field-error" style={{ marginBottom: 16 }}>
+              Sign in failed. Check OAuth redirect URLs in Google/GitHub console match{' '}
+              <code>{apiUrl}/login/oauth2/code/google</code> (or github).
+            </p>
+          )}
 
           <div className="auth-form">
             {/* Email */}

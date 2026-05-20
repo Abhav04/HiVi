@@ -20,8 +20,9 @@ public class UserService {
     private PasswordEncoder passwordEncoder;
     @Autowired
     private EmailService emailService;
-    @Autowired
+    @Autowired(required = false)
     private RedisTemplate<String, String> redisTemplate;
+
     public User save(SignupRequest signupRequest) {
 
         User user = new User();
@@ -35,11 +36,13 @@ public class UserService {
         user.setEnabled(false);
 
         userRepository.save(user);
-        redisTemplate.opsForValue().set(
-                "verify:" + user.getEmail(),
-                token,
-                java.time.Duration.ofMinutes(5)
-        );
+        if (redisTemplate != null) {
+            redisTemplate.opsForValue().set(
+                    "verify:" + user.getEmail(),
+                    token,
+                    java.time.Duration.ofMinutes(5)
+            );
+        }
 
         // ✅ send email
         emailService.sendVerificationEmail(user.getEmail(), token);

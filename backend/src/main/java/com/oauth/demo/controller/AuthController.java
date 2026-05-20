@@ -35,7 +35,7 @@ public class AuthController {
     @Autowired
     private UserRepository userRepository;
 
-    @Autowired
+    @Autowired(required = false)
     private RedisTemplate<String, String> redisTemplate;
 
     // ✅ SIGNUP
@@ -81,6 +81,10 @@ public class AuthController {
     @PostMapping("/verify")
     public ResponseEntity<?> verify(@RequestParam String email,
                                     @RequestParam String code) {
+
+        if (redisTemplate == null) {
+            return ResponseEntity.badRequest().body("Email verification is not available (Redis not configured)");
+        }
 
         String storedCode = redisTemplate.opsForValue().get("verify:" + email);
 

@@ -19,6 +19,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Extends the default OAuth2 user loader to resolve GitHub primary email when not public.
+ */
 @Service
 public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
@@ -36,6 +39,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         if (oauthUser.getAttribute("email") != null) {
             return oauthUser;
         }
+
+        String login = oauthUser.getAttribute("login") != null
+                ? oauthUser.getAttribute("login").toString()
+                : "github-user";
 
         try {
             String token = userRequest.getAccessToken().getTokenValue();
@@ -56,11 +63,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                     Boolean primary = (Boolean) entry.get("primary");
                     Boolean verified = (Boolean) entry.get("verified");
                     Object email = entry.get("email");
-                    if (email != null && Boolean.TRUE.equals(verified)
-                            && (Boolean.TRUE.equals(primary) || oauthUser.getAttribute("email") == null)) {
+                    if (email != null && Boolean.TRUE.equals(verified) && Boolean.TRUE.equals(primary)) {
                         Map<String, Object> attributes = new LinkedHashMap<>(oauthUser.getAttributes());
                         attributes.put("email", email.toString());
-                        log.info("Resolved GitHub primary email for user {}", oauthUser.getAttribute("login"));
+                        log.info("Resolved GitHub primary email for user {}", login);
                         return new DefaultOAuth2User(
                                 oauthUser.getAuthorities(),
                                 attributes,
@@ -70,7 +76,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 }
             }
         } catch (Exception ex) {
-            log.warn("Could not fetch GitHub email list, using login fallback: {}", ex.getMessage());
+            log.warn("Could not fetch GitHub email list for {}: {}", login, ex.getMessage());
         }
 
         return oauthUser;

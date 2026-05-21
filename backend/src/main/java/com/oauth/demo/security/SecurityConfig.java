@@ -14,6 +14,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -30,13 +32,14 @@ public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler successHandler;
     private final OAuth2LoginFailureHandler failureHandler;
-    private final CompositeOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+    private final AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository;
     private final CustomOAuth2UserService customOAuth2UserService;
 
-    public SecurityConfig(OAuth2LoginSuccessHandler successHandler,
-                          OAuth2LoginFailureHandler failureHandler,
-                          CompositeOAuth2AuthorizationRequestRepository authorizationRequestRepository,
-                          CustomOAuth2UserService customOAuth2UserService) {
+    public SecurityConfig(
+            OAuth2LoginSuccessHandler successHandler,
+            OAuth2LoginFailureHandler failureHandler,
+            AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository,
+            CustomOAuth2UserService customOAuth2UserService) {
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
         this.authorizationRequestRepository = authorizationRequestRepository;
@@ -60,14 +63,13 @@ public class SecurityConfig {
         http.cors(cors -> {});
         http.csrf(AbstractHttpConfigurer::disable);
         http.formLogin(AbstractHttpConfigurer::disable);
-        // OAuth2 login needs a session to store the authorization request between redirects
-        http.sessionManagement(
-                session -> session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED)
-        );
+
+        // Required for OAuth2 authorization request + authorized client between redirects
+        http.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED));
 
         http.exceptionHandling(exception ->
-                exception.authenticationEntryPoint(unauthorizedHandler)
-        );
+                exception.authenticationEntryPoint(unauthorizedHandler));
 
         http.authorizeHttpRequests(auth ->
                 auth.requestMatchers("/user/signin").permitAll()
@@ -81,8 +83,7 @@ public class SecurityConfig {
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/health", "/actuator/health", "/oauth/status").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
-                        .anyRequest().authenticated()
-        );
+                        .anyRequest().authenticated());
 
         if (isOAuthConfigured(env)) {
             http.oauth2Login(oauth2 -> oauth2

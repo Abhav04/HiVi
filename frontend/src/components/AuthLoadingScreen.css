@@ -159,7 +159,8 @@
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--gold);
+  background: #a855f7;
+  box-shadow: 0 0 12px rgba(168, 85, 247, 0.6);
   animation: authPulse 1.2s ease infinite;
 }
 

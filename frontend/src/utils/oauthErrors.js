@@ -24,6 +24,25 @@ const ERROR_MAP = {
     message: 'We could not complete sign-in with your provider.',
     action: 'Please try again in a moment.',
   },
+  session_expired: {
+    type: 'user',
+    title: 'Session timed out',
+    message:
+      'The sign-in session expired while the server was waking up. This is common on free hosting.',
+    action: 'Click GitHub or Google again — stay on this tab until sign-in finishes.',
+  },
+  jwt_error: {
+    type: 'config',
+    title: 'Server configuration error',
+    message: 'Sign-in succeeded with your provider but the server could not issue a login token.',
+    action: 'Contact the app owner to fix JWT_SECRET on Render.',
+  },
+  server_error: {
+    type: 'user',
+    title: 'Server error',
+    message: 'Something went wrong on our server after provider sign-in.',
+    action: 'Try again in a moment.',
+  },
 };
 
 export function parseOAuthError(raw) {
@@ -46,6 +65,15 @@ export function parseOAuthError(raw) {
   }
   if (lower.includes('access_denied') || lower.includes('denied')) {
     return ERROR_MAP.access_denied;
+  }
+  if (lower.includes('session_expired') || lower.includes('authorization_request')) {
+    return ERROR_MAP.session_expired;
+  }
+  if (lower.includes('jwt_error')) {
+    return ERROR_MAP.jwt_error;
+  }
+  if (lower.includes('server_error')) {
+    return ERROR_MAP.server_error;
   }
   if (ERROR_MAP[lower]) {
     return ERROR_MAP[lower];

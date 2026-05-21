@@ -20,8 +20,9 @@ const OAuthErrorCard = ({ error, onDismiss, apiUrl }) => {
         {error.action && <p className="oauth-error-action">{error.action}</p>}
         {error.type === 'config' && apiUrl && (
           <p className="oauth-error-tech">
-            Developer: verify OAuth credentials and redirect URI at{' '}
-            <code>{apiUrl}/login/oauth2/code/google</code>
+            Developer: set callback URLs in Google/GitHub to{' '}
+            <code>{apiUrl}/login/oauth2/code/google</code> and{' '}
+            <code>{apiUrl}/login/oauth2/code/github</code>
           </p>
         )}
       </div>

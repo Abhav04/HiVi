@@ -1,5 +1,6 @@
 package com.oauth.demo.config;
 
+import com.oauth.demo.jwt.JwtUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -17,8 +18,25 @@ public class StartupConfig {
         Environment env = event.getApplicationContext().getEnvironment();
         log.info("Active profiles: {}", String.join(",", env.getActiveProfiles()));
         log.info("Server port: {}", env.getProperty("server.port"));
+        log.info("app.frontend.url: {}", env.getProperty("app.frontend.url"));
+        log.info("app.base.url: {}", env.getProperty("app.base.url"));
         log.info("DATABASE_URL set: {}", env.getProperty("DATABASE_URL") != null);
-        log.info("DB_HOST set: {}", env.getProperty("DB_HOST") != null);
-        log.info("DB_USERNAME set: {}", env.getProperty("DB_USERNAME") != null);
+
+        String googleId = env.getProperty("spring.security.oauth2.client.registration.google.client-id", "");
+        String githubId = env.getProperty("spring.security.oauth2.client.registration.github.client-id", "");
+        log.info("Google OAuth configured: {}", isOAuthId(googleId));
+        log.info("GitHub OAuth configured: {}", isOAuthId(githubId));
+
+        try {
+            String secret = env.getProperty("spring.app.jwtSecret", "");
+            JwtUtils.deriveKeyBytes(secret);
+            log.info("JWT signing key: OK");
+        } catch (Exception e) {
+            log.error("JWT signing key INVALID — OAuth login will fail after provider auth: {}", e.getMessage());
+        }
+    }
+
+    private boolean isOAuthId(String id) {
+        return id != null && !id.isBlank() && !"YOUR_CLIENT_ID".equals(id);
     }
 }

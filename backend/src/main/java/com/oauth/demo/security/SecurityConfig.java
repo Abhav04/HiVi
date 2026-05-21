@@ -14,8 +14,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.oauth2.client.web.HttpCookieOAuth2AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 
 @Configuration
 @EnableMethodSecurity
@@ -48,6 +51,15 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+    /**
+     * Stores OAuth state in a cookie so GitHub/Google callbacks still work after
+     * Render free-tier cold starts or instance restarts (session would be lost).
+     */
+    @Bean
+    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
+        return new HttpCookieOAuth2AuthorizationRequestRepository();
+    }
+
     @Bean
     SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http, Environment env) throws Exception {
         http.securityMatcher("/**");
@@ -73,13 +85,15 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
-                        .requestMatchers("/health", "/actuator/health").permitAll()
+                        .requestMatchers("/health", "/actuator/health", "/oauth/status").permitAll()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated()
         );
 
         if (isOAuthConfigured(env)) {
             http.oauth2Login(oauth2 -> oauth2
+                    .authorizationEndpoint(endpoint -> endpoint
+                            .authorizationRequestRepository(authorizationRequestRepository()))
                     .successHandler(successHandler)
                     .failureHandler(failureHandler));
         }

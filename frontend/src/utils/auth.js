@@ -1,7 +1,13 @@
 const USER_KEY = 'hivi_user';
 
-export const getApiUrl = () =>
-  process.env.REACT_APP_API_URL || 'http://localhost:8080';
+const PRODUCTION_API = 'https://hivi-idam.onrender.com';
+
+export const getApiUrl = () => {
+  const fromEnv = process.env.REACT_APP_API_URL?.replace(/\/$/, '');
+  if (fromEnv) return fromEnv;
+  if (process.env.NODE_ENV === 'production') return PRODUCTION_API;
+  return 'http://localhost:8080';
+};
 
 export const getInitials = (name = '') => {
   const parts = name.trim().split(/\s+/).filter(Boolean);

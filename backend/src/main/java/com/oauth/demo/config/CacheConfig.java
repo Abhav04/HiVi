@@ -12,6 +12,8 @@ import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 
+import java.time.Duration;
+
 @Configuration
 @EnableCaching
 public class CacheConfig {
@@ -19,16 +21,20 @@ public class CacheConfig {
     @Bean
     @ConditionalOnProperty(name = "spring.cache.type", havingValue = "redis")
     public CacheManager redisCacheManager(RedisConnectionFactory redisConnectionFactory) {
-        RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig();
+        RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig();
+        RedisCacheConfiguration redditConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(10));
+
         return RedisCacheManager.builder(redisConnectionFactory)
-                .cacheDefaults(config)
+                .cacheDefaults(defaultConfig)
+                .withCacheConfiguration("reddit-trending", redditConfig)
                 .build();
     }
 
     @Bean
     @ConditionalOnMissingBean(CacheManager.class)
     public CacheManager simpleCacheManager() {
-        return new ConcurrentMapCacheManager("posts");
+        return new ConcurrentMapCacheManager("posts", "reddit-trending");
     }
 
     @Bean

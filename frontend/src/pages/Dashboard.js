@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Navbar from '../components/Navbar';
+import RedditTrendingFeed from '../components/reddit/RedditTrendingFeed';
 import { getUser, clearUser, getInitials, getFirstName, getLastName } from '../utils/auth';
 import './Dashboard.css';
 
@@ -122,7 +123,11 @@ const Dashboard = () => {
                 ))}
               </div>
 
-              <div className="dash-section animate-fadeUp delay-2">
+              <div className="dash-section animate-fadeUp delay-2 dash-section-reddit">
+                <RedditTrendingFeed />
+              </div>
+
+              <div className="dash-section animate-fadeUp delay-3">
                 <div className="dash-section-header">
                   <h2 className="dash-section-title">recent projects</h2>
                   {!isNewUser && (
@@ -178,7 +183,7 @@ const Dashboard = () => {
                 )}
               </div>
 
-              <div className="dash-section animate-fadeUp delay-3">
+              <div className="dash-section animate-fadeUp delay-4">
                 <h2 className="dash-section-title" style={{ marginBottom: 16 }}>quick actions</h2>
                 <div className="quick-actions">
                   {[

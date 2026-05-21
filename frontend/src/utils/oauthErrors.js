@@ -43,6 +43,13 @@ const ERROR_MAP = {
     message: 'Something went wrong on our server after provider sign-in.',
     action: 'Try again in a moment.',
   },
+  invalid_grant: {
+    type: 'user',
+    title: 'Sign-in link expired',
+    message:
+      'The authorization code expired or did not match. This often happens if the server restarted during sign-in.',
+    action: 'Click GitHub or Google again immediately and complete sign-in without delay.',
+  },
 };
 
 export function parseOAuthError(raw) {
@@ -60,7 +67,7 @@ export function parseOAuthError(raw) {
   if (lower.includes('invalid_client') || lower.includes('client secret')) {
     return ERROR_MAP.invalid_client;
   }
-  if (lower.includes('redirect_uri') || lower.includes('redirect')) {
+  if (lower.includes('redirect_uri')) {
     return ERROR_MAP.redirect_uri;
   }
   if (lower.includes('access_denied') || lower.includes('denied')) {
@@ -74,6 +81,9 @@ export function parseOAuthError(raw) {
   }
   if (lower.includes('server_error')) {
     return ERROR_MAP.server_error;
+  }
+  if (lower.includes('invalid_grant')) {
+    return ERROR_MAP.invalid_grant;
   }
   if (ERROR_MAP[lower]) {
     return ERROR_MAP[lower];

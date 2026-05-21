@@ -5,9 +5,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
-import org.springframework.stereotype.Component;
 import org.springframework.web.util.WebUtils;
 
 import java.util.Base64;
@@ -18,23 +20,29 @@ import java.util.Optional;
 import java.util.Set;
 
 /**
- * Persists {@link OAuth2AuthorizationRequest} in an HTTP cookie so OAuth state survives
- * Render free-tier restarts (session-based storage is lost when the instance changes).
+ * Cookie-backed OAuth2 authorization request store for Render cold starts.
  */
-@Component
 public class CookieOAuth2AuthorizationRequestRepository
         implements AuthorizationRequestRepository<OAuth2AuthorizationRequest> {
 
+    private static final Logger log =
+            LoggerFactory.getLogger(CookieOAuth2AuthorizationRequestRepository.class);
+
     static final String COOKIE_NAME = "oauth2_auth_request";
-    private static final int COOKIE_EXPIRE_SECONDS = 180;
+    private static final int COOKIE_EXPIRE_SECONDS = 600;
 
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
     public OAuth2AuthorizationRequest loadAuthorizationRequest(HttpServletRequest request) {
-        return getCookieValue(request)
-                .map(this::deserialize)
-                .orElse(null);
+        try {
+            return getCookieValue(request)
+                    .map(this::deserialize)
+                    .orElse(null);
+        } catch (Exception ex) {
+            log.warn("Could not restore OAuth2 authorization request from cookie: {}", ex.getMessage());
+            return null;
+        }
     }
 
     @Override
@@ -45,7 +53,11 @@ public class CookieOAuth2AuthorizationRequestRepository
             deleteCookie(request, response);
             return;
         }
-        addCookie(response, serialize(authorizationRequest));
+        try {
+            addCookie(response, serialize(authorizationRequest));
+        } catch (Exception ex) {
+            log.error("Failed to persist OAuth2 authorization request cookie", ex);
+        }
     }
 
     @Override
@@ -93,8 +105,9 @@ public class CookieOAuth2AuthorizationRequestRepository
             payload.put("redirectUri", request.getRedirectUri());
             payload.put("scopes", request.getScopes());
             payload.put("state", request.getState());
-            payload.put("additionalParameters", request.getAdditionalParameters());
-            payload.put("attributes", request.getAttributes());
+            payload.put("authorizationGrantType", request.getAuthorizationGrantType().getValue());
+            payload.put("additionalParameters", stringifyMap(request.getAdditionalParameters()));
+            payload.put("attributes", stringifyMap(request.getAttributes()));
             byte[] json = objectMapper.writeValueAsBytes(payload);
             return Base64.getUrlEncoder().encodeToString(json);
         } catch (Exception ex) {
@@ -111,6 +124,8 @@ public class CookieOAuth2AuthorizationRequestRepository
             String clientId = (String) payload.get("clientId");
             String redirectUri = (String) payload.get("redirectUri");
             String state = (String) payload.get("state");
+            String grantType = (String) payload.getOrDefault(
+                    "authorizationGrantType", AuthorizationGrantType.AUTHORIZATION_CODE.getValue());
 
             Set<String> scopes = new LinkedHashSet<>();
             Object scopesObj = payload.get("scopes");
@@ -125,18 +140,20 @@ public class CookieOAuth2AuthorizationRequestRepository
             Map<String, Object> additionalParameters = readStringObjectMap(payload.get("additionalParameters"));
             Map<String, Object> attributes = readStringObjectMap(payload.get("attributes"));
 
-            OAuth2AuthorizationRequest.Builder builder = OAuth2AuthorizationRequest.authorizationCode()
+            OAuth2AuthorizationRequest.Builder builder = OAuth2AuthorizationRequest
+                    .authorizationCode()
                     .authorizationUri(authorizationUri)
                     .clientId(clientId)
                     .redirectUri(redirectUri)
                     .scopes(scopes)
-                    .state(state);
+                    .state(state)
+                    .authorizationGrantType(new AuthorizationGrantType(grantType));
 
             if (!additionalParameters.isEmpty()) {
-                builder.additionalParameters(new LinkedHashMap<>(additionalParameters));
+                builder.additionalParameters(additionalParameters);
             }
             if (!attributes.isEmpty()) {
-                builder.attributes(new LinkedHashMap<>(attributes));
+                builder.attributes(attributes);
             }
 
             return builder.build();
@@ -145,20 +162,32 @@ public class CookieOAuth2AuthorizationRequestRepository
         }
     }
 
-    @SuppressWarnings("unchecked")
+    private Map<String, Object> stringifyMap(Map<String, Object> source) {
+        Map<String, Object> result = new LinkedHashMap<>();
+        if (source == null) {
+            return result;
+        }
+        source.forEach((key, value) -> {
+            if (key != null && value != null) {
+                result.put(key, value.toString());
+            }
+        });
+        return result;
+    }
+
     private Map<String, Object> readStringObjectMap(Object raw) {
         if (raw == null) {
-            return Map.of();
+            return new LinkedHashMap<>();
         }
         if (raw instanceof Map<?, ?> map) {
             Map<String, Object> result = new LinkedHashMap<>();
             map.forEach((k, v) -> {
-                if (k != null) {
-                    result.put(k.toString(), v);
+                if (k != null && v != null) {
+                    result.put(k.toString(), v.toString());
                 }
             });
             return result;
         }
-        return Map.of();
+        return new LinkedHashMap<>();
     }
 }

@@ -32,6 +32,8 @@ public class OAuthStatusController {
     public Map<String, Object> status() {
         String googleId = env.getProperty("spring.security.oauth2.client.registration.google.client-id", "");
         String githubId = env.getProperty("spring.security.oauth2.client.registration.github.client-id", "");
+        String googleSecret = env.getProperty("spring.security.oauth2.client.registration.google.client-secret", "");
+        String githubSecret = env.getProperty("spring.security.oauth2.client.registration.github.client-secret", "");
         String jwtSecret = env.getProperty("spring.app.jwtSecret", "");
 
         boolean googleOk = isConfigured(googleId);
@@ -50,7 +52,10 @@ public class OAuthStatusController {
         body.put("profiles", env.getActiveProfiles());
         body.put("googleOAuthConfigured", googleOk);
         body.put("githubOAuthConfigured", githubOk);
+        body.put("googleClientSecretSet", isSecretConfigured(googleSecret));
+        body.put("githubClientSecretSet", isSecretConfigured(githubSecret));
         body.put("jwtSigningKeyValid", jwtOk);
+        body.put("githubClientAuthentication", "client_secret_post");
         body.put("googleRedirectUri", baseUrl + "/login/oauth2/code/google");
         body.put("githubRedirectUri", baseUrl + "/login/oauth2/code/github");
         body.put("githubClientIdPrefix", githubOk ? githubId.substring(0, Math.min(8, githubId.length())) + "..." : null);
@@ -61,5 +66,10 @@ public class OAuthStatusController {
 
     private boolean isConfigured(String clientId) {
         return clientId != null && !clientId.isBlank() && !"YOUR_CLIENT_ID".equals(clientId);
+    }
+
+    private boolean isSecretConfigured(String secret) {
+        return secret != null && !secret.isBlank()
+                && !"YOUR_CLIENT_SECRET".equals(secret);
     }
 }

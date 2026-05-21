@@ -30,14 +30,17 @@ public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler successHandler;
     private final OAuth2LoginFailureHandler failureHandler;
-    private final CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+    private final CompositeOAuth2AuthorizationRequestRepository authorizationRequestRepository;
+    private final CustomOAuth2UserService customOAuth2UserService;
 
     public SecurityConfig(OAuth2LoginSuccessHandler successHandler,
                           OAuth2LoginFailureHandler failureHandler,
-                          CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository) {
+                          CompositeOAuth2AuthorizationRequestRepository authorizationRequestRepository,
+                          CustomOAuth2UserService customOAuth2UserService) {
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
         this.authorizationRequestRepository = authorizationRequestRepository;
+        this.customOAuth2UserService = customOAuth2UserService;
     }
 
     @Bean
@@ -85,6 +88,8 @@ public class SecurityConfig {
             http.oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(endpoint -> endpoint
                             .authorizationRequestRepository(authorizationRequestRepository))
+                    .userInfoEndpoint(userInfo -> userInfo
+                            .userService(customOAuth2UserService))
                     .successHandler(successHandler)
                     .failureHandler(failureHandler));
         }

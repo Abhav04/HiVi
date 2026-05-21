@@ -67,6 +67,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
                 user.setProvider(provider);
                 user.setRole("client");
                 user.setEnabled(true);
+                user.setPassword("{noop}");
                 userRepository.save(user);
             } else {
                 if (user.getDisplayName() == null || user.getDisplayName().isBlank()) {

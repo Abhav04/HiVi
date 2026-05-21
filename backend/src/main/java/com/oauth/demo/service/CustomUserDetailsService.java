@@ -25,12 +25,20 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("User not found");
         }
 
-        SimpleGrantedAuthority authority =
-                new SimpleGrantedAuthority(user.getRole());
+        String role = user.getRole() != null ? user.getRole() : "client";
+        SimpleGrantedAuthority authority = new SimpleGrantedAuthority(
+                role.startsWith("ROLE_") ? role : "ROLE_" + role
+        );
+
+        String password = user.getPassword() != null ? user.getPassword() : "{noop}";
 
         return new org.springframework.security.core.userdetails.User(
                 user.getUsername(),
-                user.getPassword(),
+                password,
+                user.isEnabled(),
+                true,
+                true,
+                true,
                 List.of(authority)
         );
     }

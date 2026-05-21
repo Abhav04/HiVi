@@ -26,8 +26,18 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
                                         HttpServletResponse response,
                                         AuthenticationException exception) throws IOException {
         log.error("OAuth login failed: {}", exception.getMessage(), exception);
-        String message = exception.getMessage() != null ? exception.getMessage() : "oauth_failed";
-        String redirect = frontendUrl + "/login?error=" + URLEncoder.encode(message, StandardCharsets.UTF_8);
+
+        String raw = exception.getMessage() != null ? exception.getMessage().toLowerCase() : "";
+        String code = "oauth_failed";
+        if (raw.contains("invalid_client") || raw.contains("client secret")) {
+            code = "invalid_client";
+        } else if (raw.contains("redirect_uri")) {
+            code = "redirect_uri";
+        } else if (raw.contains("access_denied") || raw.contains("authorization_denied")) {
+            code = "access_denied";
+        }
+
+        String redirect = frontendUrl + "/login?error=" + URLEncoder.encode(code, StandardCharsets.UTF_8);
         response.sendRedirect(redirect);
     }
 }

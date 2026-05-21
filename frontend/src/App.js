@@ -6,6 +6,7 @@ import Signup from './pages/Signup';
 import Dashboard from './pages/Dashboard';
 import HomeFeed from './pages/HomeFeed';
 import OAuthSuccess from "./pages/OAuthSuccess";
+import AuthConnecting from './pages/AuthConnecting';
 import './App.css';
 
 function App() {
@@ -15,6 +16,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/auth/connecting" element={<AuthConnecting />} />
           <Route path="/oauth-success" element={<OAuthSuccess />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/dashboard" element={<Dashboard />} />

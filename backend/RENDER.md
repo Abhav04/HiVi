@@ -25,8 +25,8 @@
 | `JWT_SECRET` | Any long random string (plain text OK — app hashes it to a signing key) |
 | `GOOGLE_CLIENT_ID` | From Google Cloud Console |
 | `GOOGLE_CLIENT_SECRET` | From Google Cloud Console |
-| `GITHUB_CLIENT_ID` | From GitHub OAuth App |
-| `GITHUB_CLIENT_SECRET` | From GitHub OAuth App |
+| `GITHUB_CLIENT_ID` | From GitHub OAuth App → **must match** the app whose callback URL you configured |
+| `GITHUB_CLIENT_SECRET` | From GitHub OAuth App → **Client secrets** → Generate/Copy. **Required** — without this, GitHub login returns `invalid_client` |
 
 `PORT` is set automatically by Render — do not override it.
 
@@ -82,7 +82,9 @@ After deploy, open:
 
 `https://hivi-idam.onrender.com/oauth/status`
 
-You should see `jwtSigningKeyValid: true`, correct `frontendUrl`, and `githubRedirectUri` / `googleRedirectUri`.
+You should see `jwtSigningKeyValid: true`, `githubClientSecretSet: true`, `readyForGithubLogin: true`, correct `frontendUrl`, and `githubRedirectUri` / `googleRedirectUri`.
+
+If `githubClientSecretSet` is **false**, GitHub login will not work until you add `GITHUB_CLIENT_SECRET` on Render and redeploy.
 
 **GitHub OAuth App** → Settings → **Authorization callback URL** (exactly):
 

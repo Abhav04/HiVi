@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 import AuthLoadingScreen from '../components/AuthLoadingScreen';
 import { getApiUrl } from '../utils/auth';
 import { wakeBackend } from '../utils/wakeBackend';
+import { fetchOAuthStatus, getOAuthBlockers } from '../utils/oauthStatus';
 
 const AuthConnecting = () => {
   const [searchParams] = useSearchParams();
@@ -29,6 +30,23 @@ const AuthConnecting = () => {
 
       if (cancelled) {
         clearInterval(progressTimer);
+        return;
+      }
+
+      let oauthStatus = null;
+      try {
+        oauthStatus = await fetchOAuthStatus(apiUrl);
+      } catch {
+        // continue — backend may still work
+      }
+
+      const blockers = getOAuthBlockers(oauthStatus, provider);
+      if (blockers.length > 0) {
+        clearInterval(progressTimer);
+        const code = provider === 'github' && oauthStatus && !oauthStatus.githubClientSecretSet
+          ? 'github_secret_missing'
+          : 'invalid_client';
+        window.location.href = `/login?error=${encodeURIComponent(code)}`;
         return;
       }
 

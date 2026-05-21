@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import OAuthErrorCard from '../components/OAuthErrorCard';
 import { getApiUrl, getUser, saveUser, nameFromEmail } from '../utils/auth';
 import { parseOAuthError } from '../utils/oauthErrors';
+import { fetchOAuthStatus, getOAuthBlockers } from '../utils/oauthStatus';
 import './Auth.css';
 
 const Login = () => {
@@ -11,8 +12,21 @@ const Login = () => {
   const oauthErrorRaw = searchParams.get('error');
   const apiUrl = getApiUrl();
   const oauthError = useMemo(() => parseOAuthError(oauthErrorRaw), [oauthErrorRaw]);
+  const [oauthStatus, setOauthStatus] = useState(null);
+  const [configError, setConfigError] = useState(null);
 
   const startOAuth = (provider) => {
+    const blockers = getOAuthBlockers(oauthStatus, provider);
+    if (blockers.length > 0) {
+      setConfigError({
+        type: 'config',
+        title: provider === 'github' ? 'GitHub not ready' : 'Google not ready',
+        message: blockers[0],
+        action: 'Fix Render environment variables and redeploy the backend, then try again.',
+      });
+      return;
+    }
+    setConfigError(null);
     navigate(`/auth/connecting?provider=${provider}`);
   };
 
@@ -23,6 +37,9 @@ const Login = () => {
 
   useEffect(() => {
     fetch(`${apiUrl}/health`, { method: 'GET', cache: 'no-store' }).catch(() => {});
+    fetchOAuthStatus(apiUrl)
+      .then(setOauthStatus)
+      .catch(() => {});
   }, [apiUrl]);
 
   const [form, setForm] = useState({ email: '', password: '' });
@@ -124,8 +141,11 @@ const Login = () => {
           </div>
 
           <OAuthErrorCard
-            error={oauthError}
-            onDismiss={dismissError}
+            error={configError || oauthError}
+            onDismiss={() => {
+              setConfigError(null);
+              dismissError();
+            }}
             apiUrl={apiUrl}
           />
 

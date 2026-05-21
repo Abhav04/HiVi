@@ -6,7 +6,9 @@ import org.springframework.core.env.Environment;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -61,6 +63,27 @@ public class OAuthStatusController {
         body.put("githubClientIdPrefix", githubOk ? githubId.substring(0, Math.min(8, githubId.length())) + "..." : null);
         body.put("googleClientIdSuffix", googleOk && googleId.length() > 12
                 ? "..." + googleId.substring(googleId.length() - 12) : null);
+
+        boolean githubSecretOk = isSecretConfigured(githubSecret);
+        boolean googleSecretOk = isSecretConfigured(googleSecret);
+        boolean readyGithub = githubOk && githubSecretOk && jwtOk;
+        boolean readyGoogle = googleOk && googleSecretOk && jwtOk;
+
+        body.put("readyForGithubLogin", readyGithub);
+        body.put("readyForGoogleLogin", readyGoogle);
+
+        List<String> issues = new ArrayList<>();
+        if (githubOk && !githubSecretOk) {
+            issues.add("GITHUB_CLIENT_SECRET is not set on Render. GitHub login will fail with invalid_client until you add it and redeploy.");
+        }
+        if (googleOk && !googleSecretOk) {
+            issues.add("GOOGLE_CLIENT_SECRET is not set on Render.");
+        }
+        if (!jwtOk) {
+            issues.add("JWT_SECRET is missing or invalid.");
+        }
+        body.put("issues", issues);
+
         return body;
     }
 

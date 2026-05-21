@@ -27,6 +27,19 @@ public class StartupConfig {
         log.info("Google OAuth configured: {}", isOAuthId(googleId));
         log.info("GitHub OAuth configured: {}", isOAuthId(githubId));
 
+        String googleSecret = env.getProperty("spring.security.oauth2.client.registration.google.client-secret", "");
+        String githubSecret = env.getProperty("spring.security.oauth2.client.registration.github.client-secret", "");
+
+        if (isOAuthId(githubId) && !isSecretConfigured(githubSecret)) {
+            log.error("GITHUB_CLIENT_SECRET is NOT set on Render. GitHub OAuth will fail until you add the Client Secret from GitHub Developer Settings -> OAuth Apps -> your app -> Client secrets, then redeploy.");
+        } else if (isOAuthId(githubId)) {
+            log.info("GitHub OAuth client secret: configured");
+        }
+
+        if (isOAuthId(googleId) && !isSecretConfigured(googleSecret)) {
+            log.error("GOOGLE_CLIENT_SECRET is NOT set on Render.");
+        }
+
         try {
             String secret = env.getProperty("spring.app.jwtSecret", "");
             JwtUtils.deriveKeyBytes(secret);
@@ -38,5 +51,9 @@ public class StartupConfig {
 
     private boolean isOAuthId(String id) {
         return id != null && !id.isBlank() && !"YOUR_CLIENT_ID".equals(id);
+    }
+
+    private boolean isSecretConfigured(String secret) {
+        return secret != null && !secret.isBlank() && !"YOUR_CLIENT_SECRET".equals(secret);
     }
 }

@@ -41,6 +41,9 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
         }
 
         String code = mapErrorCode(raw, type, exception);
+        String registrationId = request.getRequestURI().contains("/github") ? "github" : "google";
+        log.error("OAuth failure on callback for provider={}, mappedError={}", registrationId, code);
+
         String redirect = frontendUrl + "/login?error=" + URLEncoder.encode(code, StandardCharsets.UTF_8);
         response.sendRedirect(redirect);
     }

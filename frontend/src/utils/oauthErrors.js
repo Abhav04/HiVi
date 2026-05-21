@@ -3,8 +3,15 @@ const ERROR_MAP = {
     type: 'config',
     title: 'Sign-in configuration issue',
     message:
-      'Google or GitHub credentials on the server need to be updated. If you are the app owner, check GOOGLE_CLIENT_SECRET and GITHUB_CLIENT_SECRET in Render.',
-    action: 'Try again later or use email sign-in.',
+      'The OAuth client secret on Render does not match GitHub or Google. This is the most common cause: GITHUB_CLIENT_SECRET is missing or wrong.',
+    action: 'In Render → Environment, set GITHUB_CLIENT_SECRET to the value from GitHub → OAuth Apps → your app → Client secrets. Then redeploy the backend.',
+  },
+  github_secret_missing: {
+    type: 'config',
+    title: 'GitHub secret missing on server',
+    message:
+      'GITHUB_CLIENT_SECRET is not set on Render. GitHub login cannot work until you add it.',
+    action: 'GitHub → Settings → Developer settings → OAuth Apps → your app → copy Client secret → paste into Render as GITHUB_CLIENT_SECRET → redeploy.',
   },
   redirect_uri: {
     type: 'config',
@@ -84,6 +91,9 @@ export function parseOAuthError(raw) {
   }
   if (lower.includes('invalid_grant')) {
     return ERROR_MAP.invalid_grant;
+  }
+  if (lower.includes('github_secret_missing')) {
+    return ERROR_MAP.github_secret_missing;
   }
   if (ERROR_MAP[lower]) {
     return ERROR_MAP[lower];

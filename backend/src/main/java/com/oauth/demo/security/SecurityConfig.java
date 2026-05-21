@@ -14,11 +14,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.oauth2.client.web.HttpCookieOAuth2AuthorizationRequestRepository;
-import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 
 @Configuration
 @EnableMethodSecurity
@@ -33,11 +30,14 @@ public class SecurityConfig {
 
     private final OAuth2LoginSuccessHandler successHandler;
     private final OAuth2LoginFailureHandler failureHandler;
+    private final CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository;
 
     public SecurityConfig(OAuth2LoginSuccessHandler successHandler,
-                          OAuth2LoginFailureHandler failureHandler) {
+                          OAuth2LoginFailureHandler failureHandler,
+                          CookieOAuth2AuthorizationRequestRepository authorizationRequestRepository) {
         this.successHandler = successHandler;
         this.failureHandler = failureHandler;
+        this.authorizationRequestRepository = authorizationRequestRepository;
     }
 
     @Bean
@@ -49,15 +49,6 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    /**
-     * Stores OAuth state in a cookie so GitHub/Google callbacks still work after
-     * Render free-tier cold starts or instance restarts (session would be lost).
-     */
-    @Bean
-    public AuthorizationRequestRepository<OAuth2AuthorizationRequest> authorizationRequestRepository() {
-        return new HttpCookieOAuth2AuthorizationRequestRepository();
     }
 
     @Bean
@@ -93,7 +84,7 @@ public class SecurityConfig {
         if (isOAuthConfigured(env)) {
             http.oauth2Login(oauth2 -> oauth2
                     .authorizationEndpoint(endpoint -> endpoint
-                            .authorizationRequestRepository(authorizationRequestRepository()))
+                            .authorizationRequestRepository(authorizationRequestRepository))
                     .successHandler(successHandler)
                     .failureHandler(failureHandler));
         }

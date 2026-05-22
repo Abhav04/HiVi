@@ -1,20 +1,18 @@
 package com.oauth.demo.reddit.config;
 
-import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.web.client.RestTemplate;
-
-import java.time.Duration;
 
 @Configuration
 public class RedditClientConfig {
 
     @Bean
-    public RestTemplate redditRestTemplate(RestTemplateBuilder builder, RedditProperties properties) {
-        return builder
-                .connectTimeout(Duration.ofMillis(properties.getConnectTimeoutMs()))
-                .readTimeout(Duration.ofMillis(properties.getReadTimeoutMs()))
-                .build();
+    public RestTemplate redditRestTemplate(RedditProperties properties) {
+        SimpleClientHttpRequestFactory factory = new SimpleClientHttpRequestFactory();
+        factory.setConnectTimeout(properties.getConnectTimeoutMs());
+        factory.setReadTimeout(properties.getReadTimeoutMs());
+        return new RestTemplate(factory);
     }
 }

@@ -51,7 +51,7 @@ public class RedditTrendingService {
         }
 
         List<RedditPostDto> filtered = filterBySubreddit(cached, subredditFilter);
-        int safeLimit = Math.clamp(limit, 1, 50);
+        int safeLimit = Math.min(50, Math.max(1, limit));
         int safePage = Math.max(page, 0);
         int from = safePage * safeLimit;
         int to = Math.min(from + safeLimit, filtered.size());

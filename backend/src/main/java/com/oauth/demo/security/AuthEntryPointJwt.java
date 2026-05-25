@@ -38,10 +38,24 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
         final Map<String, Object> body = new HashMap<>();
         body.put("status", HttpServletResponse.SC_UNAUTHORIZED);
         body.put("error", "Unauthorized");
-        body.put("message", authException.getMessage());
+        String friendly = toFriendlyMessage(authException.getMessage(), request.getServletPath());
+        body.put("message", friendly);
         body.put("path", request.getServletPath());
 
         final ObjectMapper mapper = new ObjectMapper();
         mapper.writeValue(response.getOutputStream(), body);
+    }
+
+    private static String toFriendlyMessage(String raw, String path) {
+        if (raw == null) {
+            return "Please sign in to continue.";
+        }
+        if (raw.contains("Full authentication is required") || raw.contains("Unauthorized")) {
+            if (path != null && path.startsWith("/api/community")) {
+                return "Sign in to interact with the community feed.";
+            }
+            return "Your session expired. Please sign in again.";
+        }
+        return raw;
     }
 }

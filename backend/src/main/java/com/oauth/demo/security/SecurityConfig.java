@@ -1,5 +1,6 @@
 package com.oauth.demo.security;
 
+import com.oauth.demo.config.OAuthCredentialsValidator;
 import com.oauth.demo.jwt.filter.AuthTokenFilter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.client.web.AuthorizationRequestRepository;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AuthorizationRequest;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
@@ -72,7 +74,8 @@ public class SecurityConfig {
                 exception.authenticationEntryPoint(unauthorizedHandler));
 
         http.authorizeHttpRequests(auth ->
-                auth.requestMatchers("/user/signin").permitAll()
+                auth.requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/user/signin").permitAll()
                         .requestMatchers("/user/signup").permitAll()
                         .requestMatchers("/auth/signin").permitAll()
                         .requestMatchers("/auth/signup").permitAll()
@@ -81,8 +84,13 @@ public class SecurityConfig {
                         .requestMatchers("/login/oauth2/**").permitAll()
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
-                        .requestMatchers("/health", "/actuator/health", "/oauth/status").permitAll()
+                        .requestMatchers("/health", "/actuator/health", "/oauth/status", "/oauth/begin").permitAll()
                         .requestMatchers("/api/reddit/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/opportunities/**").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/community/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/opportunities").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/community/posts/*/view").permitAll()
+                        .requestMatchers("/api/community/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated());
 
@@ -107,7 +115,7 @@ public class SecurityConfig {
     private boolean isOAuthConfigured(Environment env) {
         String googleId = env.getProperty("spring.security.oauth2.client.registration.google.client-id", "");
         String githubId = env.getProperty("spring.security.oauth2.client.registration.github.client-id", "");
-        return (!googleId.isBlank() && !"YOUR_CLIENT_ID".equals(googleId))
-                || (!githubId.isBlank() && !"YOUR_CLIENT_ID".equals(githubId));
+        return OAuthCredentialsValidator.isValidGoogleClientId(googleId)
+                || OAuthCredentialsValidator.isConfiguredClientId(githubId);
     }
 }

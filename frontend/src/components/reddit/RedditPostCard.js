@@ -1,32 +1,45 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
+import RedditPostImage from './RedditPostImage';
 import './RedditPostCard.css';
 
-const RedditPostCard = ({ post }) => {
-  const openReddit = () => {
+const badgeClass = (badge) => (badge ? badge.toLowerCase() : 'hiring');
+
+const RedditPostCard = memo(function RedditPostCard({ post, variant = 'default', priority = false }) {
+  const openReddit = useCallback(() => {
     window.open(post.redditUrl || post.permalink, '_blank', 'noopener,noreferrer');
-  };
+  }, [post.redditUrl, post.permalink]);
+
+  const handleKeyDown = useCallback(
+    (e) => {
+      if (e.key === 'Enter') openReddit();
+    },
+    [openReddit]
+  );
 
   return (
-    <article className="reddit-card" onClick={openReddit} role="button" tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && openReddit()}>
+    <article
+      className={`reddit-card reddit-card--${variant} ${post.hiring ? 'reddit-card--hiring' : ''}`}
+      onClick={openReddit}
+      role="button"
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
+    >
       <div className="reddit-card-media">
-        {post.thumbnailUrl ? (
-          <img
-            src={post.thumbnailUrl}
-            alt=""
-            className="reddit-card-thumb"
-            loading="lazy"
-            onError={(e) => { e.currentTarget.style.display = 'none'; }}
-          />
-        ) : (
-          <div className="reddit-card-thumb-placeholder">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.2">
-              <polygon points="23 7 16 12 23 17 23 7" />
-              <rect x="1" y="5" width="15" height="14" rx="2" />
-            </svg>
-          </div>
-        )}
+        <RedditPostImage
+          thumbnailUrl={post.thumbnailUrl}
+          imageUrls={post.imageUrls}
+          title={post.title}
+          subreddit={post.subreddit}
+          mediaType={post.mediaType}
+          priority={priority}
+        />
         <span className="reddit-card-subreddit">{post.subreddit}</span>
+        {post.hiring && post.hiringBadge && (
+          <span className={`reddit-card-hiring-badge reddit-card-hiring-badge--${badgeClass(post.hiringBadge)}`}>
+            {post.hiringBadge}
+          </span>
+        )}
+        <div className="reddit-card-media-glow" aria-hidden="true" />
       </div>
 
       <div className="reddit-card-body">
@@ -63,6 +76,6 @@ const RedditPostCard = ({ post }) => {
       </div>
     </article>
   );
-};
+});
 
 export default RedditPostCard;

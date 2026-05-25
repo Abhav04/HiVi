@@ -1,3 +1,4 @@
+
 # Reddit Trending Feed
 
 ## Folder structure
@@ -6,7 +7,7 @@
 backend/src/main/java/com/oauth/demo/reddit/
 ├── config/
 │   ├── RedditProperties.java      # Subreddits, delays, timeouts (application.properties)
-│   └── RedditClientConfig.java    # RestTemplate bean for Reddit HTTP
+│   └── RedditClientConfig.java    # RestTemplate + timeouts (Java 17)
 ├── controller/
 │   └── RedditController.java      # GET /api/reddit/trending
 ├── service/

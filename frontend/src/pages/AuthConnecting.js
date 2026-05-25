@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import AuthLoadingScreen from '../components/AuthLoadingScreen';
-import { getApiUrl } from '../utils/auth';
+import { getApiUrl, getOAuthApiUrl } from '../utils/auth';
 import { wakeBackend } from '../utils/wakeBackend';
 import { fetchOAuthStatus, getOAuthBlockers } from '../utils/oauthStatus';
 
@@ -40,13 +40,14 @@ const AuthConnecting = () => {
         // continue — backend may still work
       }
 
-      const blockers = getOAuthBlockers(oauthStatus, provider);
+      const blockers = getOAuthBlockers(oauthStatus, provider, apiUrl);
       if (blockers.length > 0) {
         clearInterval(progressTimer);
         const code = provider === 'github' && oauthStatus && !oauthStatus.githubClientSecretSet
           ? 'github_secret_missing'
           : 'invalid_client';
-        window.location.href = `/login?error=${encodeURIComponent(code)}`;
+        const detail = encodeURIComponent(blockers[0]);
+        window.location.href = `/login?error=${encodeURIComponent(code)}&detail=${detail}`;
         return;
       }
 
@@ -58,7 +59,8 @@ const AuthConnecting = () => {
 
       if (!cancelled) {
         setProgress(100);
-        window.location.href = `${apiUrl}/oauth2/authorization/${provider}`;
+        const frontend = encodeURIComponent(window.location.origin);
+        window.location.href = `${getOAuthApiUrl()}/oauth/begin?provider=${provider}&frontend=${frontend}`;
       }
     };
 

@@ -3,9 +3,11 @@ package com.oauth.demo.security;
 import com.oauth.demo.entity.User;
 import com.oauth.demo.jwt.JwtUtils;
 import com.oauth.demo.repository.UserRepository;
+import com.oauth.demo.controller.OAuthBeginController;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -81,8 +83,9 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
             String token = jwtUtils.generateTokenFromUsername(email);
 
+            String returnFrontend = resolveReturnFrontend(request);
             String redirectUrl = UriComponentsBuilder
-                    .fromUriString(frontendUrl + "/oauth-success")
+                    .fromUriString(returnFrontend + "/oauth-success")
                     .queryParam("token", token)
                     .queryParam("name", name)
                     .queryParam("email", email)
@@ -99,8 +102,20 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
             if (e.getMessage() != null && e.getMessage().toLowerCase().contains("jwt")) {
                 code = "jwt_error";
             }
-            response.sendRedirect(frontendUrl + "/login?error="
+            response.sendRedirect(resolveReturnFrontend(request) + "/login?error="
                     + URLEncoder.encode(code, StandardCharsets.UTF_8));
         }
+    }
+
+    private String resolveReturnFrontend(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object stored = session.getAttribute(OAuthBeginController.SESSION_FRONTEND_RETURN);
+            if (stored instanceof String url && !url.isBlank()) {
+                session.removeAttribute(OAuthBeginController.SESSION_FRONTEND_RETURN);
+                return url;
+            }
+        }
+        return frontendUrl;
     }
 }

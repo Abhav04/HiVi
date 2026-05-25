@@ -1,0 +1,5 @@
+local.env
+local.env.properties
+application-local-secrets.properties
+.env
+.env.*

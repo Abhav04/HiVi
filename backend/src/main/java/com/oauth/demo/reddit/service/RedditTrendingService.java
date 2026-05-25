@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -18,6 +19,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RedditTrendingService {
 
     private static final Logger log = LoggerFactory.getLogger(RedditTrendingService.class);
+    private static final int MAX_HIRING_SECTION = 8;
 
     private final RedditApiClient redditApiClient;
     private final RedditCacheService cacheService;
@@ -47,19 +49,40 @@ public class RedditTrendingService {
 
         if (cached.isEmpty()) {
             message = "Trending posts are temporarily unavailable. Please try again shortly.";
-            return buildResponse(List.of(), subredditFilter, page, limit, stale, message);
+            return buildResponse(List.of(), null, List.of(), subredditFilter, page, limit, stale, message, 0);
         }
 
-        List<RedditPostDto> filtered = filterBySubreddit(cached, subredditFilter);
+        List<RedditPostDto> ranked = RedditPostRanker.sortByTrending(cached);
+        List<RedditPostDto> filtered = filterBySubreddit(ranked, subredditFilter);
+
         int safeLimit = Math.min(50, Math.max(1, limit));
         int safePage = Math.max(page, 0);
-        int from = safePage * safeLimit;
-        int to = Math.min(from + safeLimit, filtered.size());
-        List<RedditPostDto> pageItems = from >= filtered.size()
-                ? List.of()
-                : filtered.subList(from, to);
 
-        return buildResponse(pageItems, subredditFilter, safePage, safeLimit, stale, message, filtered.size());
+        RedditPostDto featured = safePage == 0 && !filtered.isEmpty() ? filtered.get(0) : null;
+        List<RedditPostDto> hiringPosts = extractHiringPosts(filtered, featured);
+
+        List<RedditPostDto> gridSource = new ArrayList<>(filtered);
+        if (featured != null) {
+            gridSource.removeIf(p -> p.id().equals(featured.id()));
+        }
+
+        int from = safePage * safeLimit;
+        int to = Math.min(from + safeLimit, gridSource.size());
+        List<RedditPostDto> pageItems = from >= gridSource.size()
+                ? List.of()
+                : gridSource.subList(from, to);
+
+        return buildResponse(
+                pageItems,
+                featured,
+                hiringPosts,
+                subredditFilter,
+                safePage,
+                safeLimit,
+                stale,
+                message,
+                gridSource.size()
+        );
     }
 
     public void refreshCache() {
@@ -71,8 +94,9 @@ public class RedditTrendingService {
         try {
             log.info("Refreshing Reddit trending cache for {} subreddits", properties.getSubreddits().size());
             List<RedditPostDto> posts = redditApiClient.fetchTrendingFromAllSubreddits();
-            cacheService.put(posts);
-            log.info("Reddit cache updated with {} posts", posts.size());
+            List<RedditPostDto> ranked = RedditPostRanker.sortByTrending(posts);
+            cacheService.put(ranked);
+            log.info("Reddit cache updated with {} posts (ranked)", ranked.size());
         } catch (RedditFetchException ex) {
             log.error("Reddit refresh failed: {}", ex.getMessage());
             if (!cacheService.isEmpty()) {
@@ -83,6 +107,15 @@ public class RedditTrendingService {
         } finally {
             refreshInProgress.set(false);
         }
+    }
+
+    private List<RedditPostDto> extractHiringPosts(List<RedditPostDto> filtered, RedditPostDto featured) {
+        String featuredId = featured != null ? featured.id() : null;
+        return filtered.stream()
+                .filter(RedditPostDto::hiring)
+                .filter(p -> featuredId == null || !p.id().equals(featuredId))
+                .limit(MAX_HIRING_SECTION)
+                .toList();
     }
 
     private List<RedditPostDto> filterBySubreddit(List<RedditPostDto> posts, String subredditFilter) {
@@ -104,34 +137,27 @@ public class RedditTrendingService {
 
     private RedditTrendingResponse buildResponse(
             List<RedditPostDto> pageItems,
-            String subredditFilter,
-            int page,
-            int limit,
-            boolean stale,
-            String message
-    ) {
-        return buildResponse(pageItems, subredditFilter, page, limit, stale, message, pageItems.size());
-    }
-
-    private RedditTrendingResponse buildResponse(
-            List<RedditPostDto> pageItems,
+            RedditPostDto featured,
+            List<RedditPostDto> hiringPosts,
             String subredditFilter,
             int page,
             int limit,
             boolean stale,
             String message,
-            int totalFiltered
+            int totalGrid
     ) {
         Instant cachedAt = cacheService.getCachedAt();
-        boolean hasMore = (page + 1) * limit < totalFiltered;
+        boolean hasMore = (page + 1) * limit < totalGrid;
 
         return new RedditTrendingResponse(
                 pageItems,
+                featured,
+                hiringPosts,
                 properties.getSubreddits().stream().map(s -> "r/" + s).toList(),
                 subredditFilter == null || subredditFilter.isBlank() ? "all" : subredditFilter,
                 page,
                 limit,
-                totalFiltered,
+                totalGrid,
                 hasMore,
                 cachedAt,
                 stale,

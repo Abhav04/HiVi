@@ -30,14 +30,28 @@ public class StartupConfig {
         String googleSecret = env.getProperty("spring.security.oauth2.client.registration.google.client-secret", "");
         String githubSecret = env.getProperty("spring.security.oauth2.client.registration.github.client-secret", "");
 
+        boolean localProfile = java.util.Arrays.asList(env.getActiveProfiles()).contains("local");
+
         if (isOAuthId(githubId) && !isSecretConfigured(githubSecret)) {
-            log.error("GITHUB_CLIENT_SECRET is NOT set on Render. GitHub OAuth will fail until you add the Client Secret from GitHub Developer Settings -> OAuth Apps -> your app -> Client secrets, then redeploy.");
+            if (localProfile) {
+                log.error("GITHUB_CLIENT_SECRET missing — add it to backend/local.env (see local.env.example) and restart.");
+            } else {
+                log.error("GITHUB_CLIENT_SECRET is NOT set on Render. GitHub OAuth will fail until you add the Client Secret, then redeploy.");
+            }
         } else if (isOAuthId(githubId)) {
             log.info("GitHub OAuth client secret: configured");
         }
 
         if (isOAuthId(googleId) && !isSecretConfigured(googleSecret)) {
-            log.error("GOOGLE_CLIENT_SECRET is NOT set on Render.");
+            if (localProfile) {
+                log.error("GOOGLE_CLIENT_SECRET missing — add it to backend/local.env and restart.");
+            } else {
+                log.error("GOOGLE_CLIENT_SECRET is NOT set on Render.");
+            }
+        }
+
+        if (!isOAuthId(googleId) && !isOAuthId(githubId) && localProfile) {
+            log.warn("OAuth not configured locally. Copy Render keys to backend/local.env, or sign in with demo user cinematic_maya / demo1234");
         }
 
         try {

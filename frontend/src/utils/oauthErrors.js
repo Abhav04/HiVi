@@ -1,10 +1,25 @@
 const ERROR_MAP = {
+  google_secret_invalid: {
+    type: 'config',
+    title: 'Google client secret is wrong',
+    message:
+      'Google accepted sign-in but the backend could not finish: "The provided client secret is invalid." Your GOOGLE_CLIENT_SECRET in backend/local.env does not match the client ID.',
+    action:
+      'Google Cloud Console → Credentials → your OAuth client (same GOOGLE_CLIENT_ID as local.env) → copy Client secret → paste into GOOGLE_CLIENT_SECRET in backend/local.env → restart ./run-local.sh',
+  },
+  github_secret_invalid: {
+    type: 'config',
+    title: 'GitHub client secret is wrong',
+    message:
+      'GitHub rejected the client secret when exchanging the authorization code.',
+    action:
+      'GitHub → OAuth Apps → your app → Client secrets → copy into GITHUB_CLIENT_SECRET in backend/local.env and Render, then restart/redeploy.',
+  },
   invalid_client: {
     type: 'config',
     title: 'Sign-in configuration issue',
-    message:
-      'The OAuth client secret on Render does not match GitHub or Google. This is the most common cause: GITHUB_CLIENT_SECRET is missing or wrong.',
-    action: 'In Render → Environment, set GITHUB_CLIENT_SECRET to the value from GitHub → OAuth Apps → your app → Client secrets. Then redeploy the backend.',
+    message: 'OAuth client ID or secret is invalid on the server.',
+    action: 'Check GOOGLE_CLIENT_SECRET / GITHUB_CLIENT_SECRET in backend/local.env match your provider console.',
   },
   github_secret_missing: {
     type: 'config',
@@ -15,9 +30,19 @@ const ERROR_MAP = {
   },
   redirect_uri: {
     type: 'config',
-    title: 'Redirect mismatch',
-    message: 'The OAuth app redirect URL does not match the server. This is a developer configuration issue.',
-    action: 'Use email sign-in for now.',
+    title: 'Google redirect URI mismatch',
+    message:
+      'Google blocked sign-in because the redirect URL is not registered for this OAuth client.',
+    action:
+      'In Google Cloud Console → APIs & Services → Credentials → your OAuth client → Authorized redirect URIs, add the exact URL shown below (local + production if you use both).',
+  },
+  redirect_uri_mismatch: {
+    type: 'config',
+    title: 'Google redirect URI mismatch',
+    message:
+      'Error 400: redirect_uri_mismatch — the callback URL your local backend uses is not listed in Google Cloud Console.',
+    action:
+      'Add http://localhost:8080/login/oauth2/code/google to Authorized redirect URIs (must match exactly, including http and port 8080).',
   },
   access_denied: {
     type: 'user',
@@ -71,8 +96,17 @@ export function parseOAuthError(raw) {
 
   const lower = decoded.toLowerCase();
 
+  if (lower.includes('google_secret_invalid')) {
+    return ERROR_MAP.google_secret_invalid;
+  }
+  if (lower.includes('github_secret_invalid')) {
+    return ERROR_MAP.github_secret_invalid;
+  }
   if (lower.includes('invalid_client') || lower.includes('client secret')) {
     return ERROR_MAP.invalid_client;
+  }
+  if (lower.includes('redirect_uri_mismatch')) {
+    return ERROR_MAP.redirect_uri_mismatch;
   }
   if (lower.includes('redirect_uri')) {
     return ERROR_MAP.redirect_uri;

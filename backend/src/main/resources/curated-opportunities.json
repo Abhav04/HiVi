@@ -1,0 +1,62 @@
+[
+  {
+    "externalId": "internshala-video-editing-internships",
+    "source": "INTERNSHALA",
+    "title": "Video Editing Internships on Internshala",
+    "company": "Internshala",
+    "description": "Browse stipend-based video editing and motion internships. Apply directly on Internshala — HiVi links you to the official listing hub.",
+    "applyUrl": "https://internshala.com/internships/video-editing-internship",
+    "payLabel": "Stipend varies",
+    "workMode": "HYBRID",
+    "category": "INTERNSHIP",
+    "tags": "internship,video-editing,india"
+  },
+  {
+    "externalId": "internshala-freelance-video-editor",
+    "source": "INTERNSHALA",
+    "title": "Freelance Video Editor Gigs",
+    "company": "Internshala",
+    "description": "Part-time and freelance editing projects for creators and agencies. Curated discovery — full details on Internshala.",
+    "applyUrl": "https://internshala.com/freelancer/video-editing-jobs",
+    "payLabel": "Project-based",
+    "workMode": "REMOTE",
+    "category": "FREELANCE",
+    "tags": "freelance,remote,editor"
+  },
+  {
+    "externalId": "linkedin-video-editor-jobs",
+    "source": "LINKEDIN",
+    "title": "Video Editor Jobs on LinkedIn",
+    "company": "LinkedIn",
+    "description": "Public LinkedIn job search for video editor, motion designer, and post-production roles. HiVi does not copy listings — opens LinkedIn search.",
+    "applyUrl": "https://www.linkedin.com/jobs/search/?keywords=video%20editor&location=Worldwide&f_WT=2",
+    "payLabel": "See LinkedIn",
+    "workMode": "REMOTE",
+    "category": "REMOTE_WORK",
+    "tags": "linkedin,professional,remote"
+  },
+  {
+    "externalId": "linkedin-motion-graphics",
+    "source": "LINKEDIN",
+    "title": "Motion Graphics Designer Roles",
+    "company": "LinkedIn",
+    "description": "Discover motion graphics and After Effects roles from companies hiring globally.",
+    "applyUrl": "https://www.linkedin.com/jobs/search/?keywords=motion%20graphics%20designer&f_WT=2",
+    "payLabel": "See LinkedIn",
+    "workMode": "REMOTE",
+    "category": "MOTION_GRAPHICS",
+    "tags": "motion,after-effects,design"
+  },
+  {
+    "externalId": "linkedin-youtube-editor",
+    "source": "LINKEDIN",
+    "title": "YouTube Video Editor Openings",
+    "company": "LinkedIn",
+    "description": "Longform and creator-team editor positions. Filter and apply on LinkedIn.",
+    "applyUrl": "https://www.linkedin.com/jobs/search/?keywords=youtube%20video%20editor",
+    "payLabel": "See LinkedIn",
+    "workMode": "UNKNOWN",
+    "category": "YOUTUBE_LONGFORM",
+    "tags": "youtube,creator,longform"
+  }
+]

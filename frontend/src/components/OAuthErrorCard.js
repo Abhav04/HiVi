@@ -2,8 +2,18 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import './OAuthErrorCard.css';
 
-const OAuthErrorCard = ({ error, onDismiss, apiUrl }) => {
+const OAuthErrorCard = ({ error, onDismiss, apiUrl, oauthStatus }) => {
   if (!error) return null;
+
+  const googleRedirect =
+    oauthStatus?.googleRegistration?.redirectUri
+    || oauthStatus?.googleRedirectUri
+    || `${apiUrl}/login/oauth2/code/google`;
+  const githubRedirect =
+    oauthStatus?.githubRegistration?.redirectUri
+    || oauthStatus?.githubRedirectUri
+    || `${apiUrl}/login/oauth2/code/github`;
+  const googleClientPrefix = oauthStatus?.googleClientIdPrefix;
 
   return (
     <div className="oauth-error-card" role="alert">
@@ -19,11 +29,32 @@ const OAuthErrorCard = ({ error, onDismiss, apiUrl }) => {
         <p className="oauth-error-message">{error.message}</p>
         {error.action && <p className="oauth-error-action">{error.action}</p>}
         {error.type === 'config' && apiUrl && (
-          <p className="oauth-error-tech">
-            Developer: set callback URLs in Google/GitHub to{' '}
-            <code>{apiUrl}/login/oauth2/code/google</code> and{' '}
-            <code>{apiUrl}/login/oauth2/code/github</code>
-          </p>
+          <div className="oauth-error-tech">
+            <p>Add these <strong>exact</strong> URLs in your OAuth app settings:</p>
+            <p>
+              Google → Authorized redirect URIs: <code>{googleRedirect}</code>
+            </p>
+            <p>
+              GitHub → Authorization callback URL: <code>{githubRedirect}</code>
+            </p>
+            {googleClientPrefix && (
+              <p className="oauth-error-tech-note">
+                Open the Google OAuth client whose ID starts with <code>{googleClientPrefix}</code> — must
+                match <code>GOOGLE_CLIENT_ID</code> in backend/local.env.
+              </p>
+            )}
+            {oauthStatus?.recommendedGoogleRedirectUris?.map((uri) => (
+              <p key={uri} className="oauth-error-tech-note">
+                Add redirect URI: <code>{uri}</code>
+              </p>
+            ))}
+            {oauthStatus?.recommendedJavaScriptOrigins?.length > 0 && (
+              <p className="oauth-error-tech-note">
+                Authorized JavaScript origins (optional):{' '}
+                {oauthStatus.recommendedJavaScriptOrigins.join(', ')}
+              </p>
+            )}
+          </div>
         )}
       </div>
       {onDismiss && (

@@ -37,68 +37,65 @@ public class AuthTokenFilter extends OncePerRequestFilter {//this class is used 
                                     FilterChain filterChain)
             throws ServletException, IOException {
         String path = request.getServletPath();
-        System.out.println("Request Path: " + path);
-        // Skip JWT validation for public endpoints
-        if (path.startsWith("/auth") ||
-                path.startsWith("/user/signup") ||
-                path.startsWith("/user/signin") ||
-                path.startsWith("/oauth2") ||
-                path.startsWith("/login") ||
-                path.startsWith("/health") ||
-                path.startsWith("/oauth/status") ||
-                path.startsWith("/api/reddit") ||
-                path.startsWith("/actuator")) {
+        String method = request.getMethod();
+
+        if (isPublicPath(path, method)) {
             filterChain.doFilter(request, response);
             return;
-
         }
 
-
-        logger.debug("AuthTokenFilter called for URI: {}", request.getRequestURI());
-
         try {
-            String jwt = parseJwt(request);//extract jwt token
-
-
-            System.out.println("JWT from header = " + jwt);
-
-            if (jwt != null && jwtUtils.validateJwtToken(jwt) &&
-                    SecurityContextHolder.getContext().getAuthentication() == null) {
-
-                String username = jwtUtils.getUserNameFromJwtToken(jwt);
-
-                System.out.println("Username from token = " + username);
-
-                UserDetails userDetails =
-                        userDetailsService.loadUserByUsername(username);
-
-                UsernamePasswordAuthenticationToken authentication =
-                        new UsernamePasswordAuthenticationToken(
-                                userDetails,
-                                null,
-                                userDetails.getAuthorities()
-                        );
-
-                logger.debug("Roles from JWT: {}", userDetails.getAuthorities());
-
-                authentication.setDetails(
-                        new WebAuthenticationDetailsSource().buildDetails(request)
-                );
-
-                SecurityContextHolder.getContext()
-                        .setAuthentication(authentication);
-                System.out.println("AUTH SET: " + authentication);
+            String jwt = parseJwt(request);
+            if (jwt != null) {
+                if (jwtUtils.validateJwtToken(jwt)
+                        && SecurityContextHolder.getContext().getAuthentication() == null) {
+                    String username = jwtUtils.getUserNameFromJwtToken(jwt);
+                    UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+                    UsernamePasswordAuthenticationToken authentication =
+                            new UsernamePasswordAuthenticationToken(
+                                    userDetails, null, userDetails.getAuthorities());
+                    authentication.setDetails(
+                            new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(authentication);
+                } else {
+                    // Invalid/expired token — treat as anonymous (do not block public routes)
+                    SecurityContextHolder.clearContext();
+                }
             }
         } catch (Exception e) {
-            logger.error("Cannot set user authentication in: {}", e);
+            logger.error("Cannot set user authentication: {}", e.getMessage());
+            SecurityContextHolder.clearContext();
         }
 
         filterChain.doFilter(request, response);
     }
 
     private String parseJwt(HttpServletRequest request) {
-        String jwt = jwtUtils.getJwtFromHeader(request);
-        logger.debug("AuthTokenFilter.java: {}", jwt);
-        return jwt;
+        return jwtUtils.getJwtFromHeader(request);
+    }
+
+    private boolean isPublicPath(String path, String method) {
+        if ("OPTIONS".equalsIgnoreCase(method)) {
+            return true;
+        }
+        if (path.startsWith("/auth")
+                || path.startsWith("/user/signup")
+                || path.startsWith("/user/signin")
+                || path.startsWith("/oauth2")
+                || path.startsWith("/login")
+                || path.startsWith("/health")
+                || path.startsWith("/oauth/status")
+                || path.startsWith("/oauth/begin")
+                || path.startsWith("/api/reddit")
+                || (path.startsWith("/api/opportunities") && "GET".equalsIgnoreCase(method))
+                || path.startsWith("/actuator")
+                || path.startsWith("/h2-console")) {
+            return true;
+        }
+        if (path.startsWith("/api/community") && "GET".equalsIgnoreCase(method)) {
+            return true;
+        }
+        return path.matches("/api/community/posts/\\d+/view")
+                && "POST".equalsIgnoreCase(method);
     }
 }

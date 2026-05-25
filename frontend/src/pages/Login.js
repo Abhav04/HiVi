@@ -1,9 +1,10 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import OAuthErrorCard from '../components/OAuthErrorCard';
-import { getApiUrl, getUser, saveUser, nameFromEmail } from '../utils/auth';
+import { getApiUrl } from '../utils/auth';
 import { parseOAuthError } from '../utils/oauthErrors';
-import { fetchOAuthStatus, getOAuthBlockers } from '../utils/oauthStatus';
+import { fetchOAuthStatus, getOAuthBlockers, getOAuthConfigAction } from '../utils/oauthStatus';
+import { signInWithCredentials } from '../utils/credentialsLogin';
 import './Auth.css';
 
 const Login = () => {
@@ -16,13 +17,13 @@ const Login = () => {
   const [configError, setConfigError] = useState(null);
 
   const startOAuth = (provider) => {
-    const blockers = getOAuthBlockers(oauthStatus, provider);
+    const blockers = getOAuthBlockers(oauthStatus, provider, apiUrl);
     if (blockers.length > 0) {
       setConfigError({
         type: 'config',
         title: provider === 'github' ? 'GitHub not ready' : 'Google not ready',
         message: blockers[0],
-        action: 'Fix Render environment variables and redeploy the backend, then try again.',
+        action: getOAuthConfigAction(apiUrl),
       });
       return;
     }
@@ -32,6 +33,8 @@ const Login = () => {
 
   const dismissError = () => {
     searchParams.delete('error');
+    searchParams.delete('provider');
+    searchParams.delete('detail');
     setSearchParams(searchParams, { replace: true });
   };
 
@@ -65,24 +68,20 @@ const Login = () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
-    await new Promise((r) => setTimeout(r, 500));
-    setLoading(false);
-
-    const existing = getUser();
-    const name =
-      existing?.email === form.email && existing?.name
-        ? existing.name
-        : nameFromEmail(form.email);
-
-    saveUser({
-      name,
-      email: form.email,
-      role: existing?.email === form.email ? existing.role : 'client',
-      provider: 'local',
-      projects: existing?.email === form.email ? existing.projects ?? [] : [],
-    });
-
-    navigate('/dashboard');
+    setConfigError(null);
+    try {
+      await signInWithCredentials(form.email, form.password);
+      navigate('/dashboard');
+    } catch (err) {
+      setConfigError({
+        type: 'auth',
+        title: 'Sign in failed',
+        message: err.message || 'Invalid email/username or password.',
+        action: 'Demo account (local): cinematic_maya / demo1234 — or use Google/GitHub once OAuth is configured.',
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -140,6 +139,28 @@ const Login = () => {
             </p>
           </div>
 
+          {oauthStatus?.googleRedirectUri?.includes('localhost') && !configError && !oauthError && (
+            <div className="oauth-local-hint" role="note">
+              <p>
+                <strong>Google OAuth client ID</strong> (must match Console):{' '}
+                <code>{oauthStatus.googleClientIdPrefix || 'see /oauth/status'}</code>
+              </p>
+              <p>
+                <strong>Authorized redirect URI</strong> (exact):{' '}
+                <code>{oauthStatus.googleRedirectUri}</code>
+              </p>
+              {oauthStatus.recommendedGoogleRedirectUris?.length > 1 && (
+                <p className="oauth-local-hint-sub">
+                  Same client should also list:{' '}
+                  <code>{oauthStatus.recommendedGoogleRedirectUris.find((u) => u.includes('onrender.com'))}</code>
+                </p>
+              )}
+              {oauthStatus.issues?.length > 0 && (
+                <p className="oauth-local-hint-warn">{oauthStatus.issues[0]}</p>
+              )}
+            </div>
+          )}
+
           <OAuthErrorCard
             error={configError || oauthError}
             onDismiss={() => {
@@ -147,6 +168,7 @@ const Login = () => {
               dismissError();
             }}
             apiUrl={apiUrl}
+            oauthStatus={oauthStatus}
           />
 
           <div className="auth-form">

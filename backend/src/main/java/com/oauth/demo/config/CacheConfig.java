@@ -24,17 +24,23 @@ public class CacheConfig {
         RedisCacheConfiguration defaultConfig = RedisCacheConfiguration.defaultCacheConfig();
         RedisCacheConfiguration redditConfig = RedisCacheConfiguration.defaultCacheConfig()
                 .entryTtl(Duration.ofMinutes(10));
+        RedisCacheConfiguration opportunitiesConfig = RedisCacheConfiguration.defaultCacheConfig()
+                .entryTtl(Duration.ofMinutes(8));
 
         return RedisCacheManager.builder(redisConnectionFactory)
                 .cacheDefaults(defaultConfig)
                 .withCacheConfiguration("reddit-trending", redditConfig)
+                .withCacheConfiguration("opportunities-feed", opportunitiesConfig)
+                .withCacheConfiguration("opportunities-trending", opportunitiesConfig)
                 .build();
     }
 
     @Bean
     @ConditionalOnMissingBean(CacheManager.class)
     public CacheManager simpleCacheManager() {
-        return new ConcurrentMapCacheManager("posts", "reddit-trending");
+        return new ConcurrentMapCacheManager(
+                "posts", "reddit-trending", "community-feed",
+                "opportunities-feed", "opportunities-trending");
     }
 
     @Bean

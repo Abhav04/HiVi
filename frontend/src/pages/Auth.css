@@ -1,3 +1,34 @@
+.oauth-local-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--muted2);
+  margin-bottom: 16px;
+  padding: 12px 14px;
+  border: 1px solid rgba(201, 168, 76, 0.25);
+  border-radius: var(--radius2);
+  background: rgba(201, 168, 76, 0.06);
+}
+
+.oauth-local-hint code {
+  display: block;
+  margin-top: 6px;
+  font-size: 10px;
+  color: var(--gold);
+  word-break: break-all;
+}
+
+.oauth-local-hint-sub,
+.oauth-local-hint-warn {
+  margin-top: 8px;
+  font-size: 10px;
+  color: var(--muted2);
+  line-height: 1.45;
+}
+
+.oauth-local-hint-warn {
+  color: #e8a87c;
+}
+
 .auth-page {
   min-height: 100vh;
   display: grid;

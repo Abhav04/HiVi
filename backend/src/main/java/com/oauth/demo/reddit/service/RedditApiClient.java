@@ -21,7 +21,6 @@ import java.net.URI;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -35,10 +34,6 @@ import java.util.Set;
 public class RedditApiClient {
 
     private static final Logger log = LoggerFactory.getLogger(RedditApiClient.class);
-    private static final Set<String> INVALID_THUMBNAILS = Set.of(
-            "", "self", "default", "nsfw", "spoiler", "image", "deleted"
-    );
-
     private final RestTemplate redditRestTemplate;
     private final RedditProperties properties;
     private final ObjectMapper objectMapper = new ObjectMapper();
@@ -149,7 +144,19 @@ public class RedditApiClient {
                     ? permalink
                     : "https://www.reddit.com" + permalink;
 
-            String thumbnail = resolveThumbnail(data);
+            String selftext = data.path("selftext").asText("");
+            RedditImageResolver.ResolvedImage image = RedditImageResolver.resolve(data);
+            List<String> imageUrls = new ArrayList<>();
+            if (image.primaryUrl() != null) {
+                imageUrls.add(image.primaryUrl());
+            }
+            imageUrls.addAll(image.fallbackUrls());
+
+            boolean hiring = RedditHiringDetector.isHiringPost(title, subreddit, selftext);
+            String hiringBadge = RedditHiringDetector.resolveBadge(title, subreddit, selftext);
+            double trendingScore = RedditPostRanker.computeTrendingScore(
+                    score, comments, createdUtc, hiring, title, subreddit, selftext
+            );
 
             posts.add(new RedditPostDto(
                     id,
@@ -158,46 +165,21 @@ public class RedditApiClient {
                     author,
                     score,
                     comments,
-                    thumbnail,
+                    image.primaryUrl(),
+                    List.copyOf(imageUrls),
                     redditUrl,
                     redditUrl,
                     createdUtc,
-                    formatTimeAgo(createdUtc)
+                    formatTimeAgo(createdUtc),
+                    trendingScore,
+                    hiring,
+                    hiringBadge,
+                    image.mediaType()
             ));
         }
 
         log.info("Fetched {} posts from r/{}", posts.size(), subreddit);
         return posts;
-    }
-
-    private String resolveThumbnail(JsonNode data) {
-        String thumb = data.path("thumbnail").asText("");
-        if (isValidThumbnail(thumb)) {
-            return thumb;
-        }
-
-        JsonNode previews = data.path("preview").path("images");
-        if (previews.isArray() && !previews.isEmpty()) {
-            String url = previews.get(0).path("source").path("url").asText("");
-            if (!url.isBlank()) {
-                return url.replace("&amp;", "&");
-            }
-        }
-
-        String url = data.path("url").asText("");
-        if (url.contains("i.redd.it") || url.contains("imgur") || url.endsWith(".jpg") || url.endsWith(".png")) {
-            return url;
-        }
-
-        return null;
-    }
-
-    private boolean isValidThumbnail(String thumb) {
-        if (thumb == null || thumb.isBlank()) {
-            return false;
-        }
-        return !INVALID_THUMBNAILS.contains(thumb.toLowerCase(Locale.ROOT))
-                && (thumb.startsWith("http://") || thumb.startsWith("https://"));
     }
 
     private List<RedditPostDto> dedupeAndSort(List<RedditPostDto> posts) {
@@ -210,8 +192,7 @@ public class RedditApiClient {
             }
         }
 
-        unique.sort(Comparator.comparingInt(RedditPostDto::upvotes).reversed());
-        return unique;
+        return RedditPostRanker.sortByTrending(unique);
     }
 
     private void sleepBetweenRequests() {

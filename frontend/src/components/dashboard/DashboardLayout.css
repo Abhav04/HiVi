@@ -1,0 +1,175 @@
+/* Featured sidebar links — Community + Reddit */
+.dash-nav-featured {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 12px;
+  margin-bottom: 4px;
+  border-radius: var(--radius);
+  text-decoration: none;
+  font-family: var(--font-body);
+  text-transform: lowercase;
+  position: relative;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 120, 40, 0.14) 0%,
+    rgba(168, 85, 247, 0.08) 100%
+  );
+  border: 1px solid rgba(255, 140, 60, 0.35);
+  box-shadow:
+    0 0 24px rgba(255, 120, 40, 0.12),
+    inset 0 1px 0 rgba(255, 180, 100, 0.08);
+  transition:
+    transform 0.25s ease,
+    border-color 0.25s ease,
+    box-shadow 0.25s ease,
+    background 0.25s ease;
+}
+
+.dash-nav-featured:hover {
+  transform: translateX(2px);
+  border-color: rgba(255, 150, 80, 0.55);
+  box-shadow:
+    0 0 32px rgba(255, 120, 40, 0.2),
+    inset 0 1px 0 rgba(255, 180, 100, 0.12);
+}
+
+.dash-nav-featured.active {
+  background: linear-gradient(
+    135deg,
+    rgba(255, 120, 40, 0.22) 0%,
+    rgba(168, 85, 247, 0.12) 100%
+  );
+  border-color: rgba(255, 160, 90, 0.65);
+  box-shadow:
+    0 0 36px rgba(255, 120, 40, 0.25),
+    inset 0 0 20px rgba(255, 100, 50, 0.06);
+}
+
+.dash-nav-featured--community {
+  background: linear-gradient(
+    135deg,
+    rgba(168, 85, 247, 0.16) 0%,
+    rgba(124, 58, 237, 0.08) 100%
+  );
+  border-color: rgba(168, 85, 247, 0.4);
+  box-shadow: 0 0 24px rgba(168, 85, 247, 0.1);
+  margin-bottom: 8px;
+}
+
+.dash-nav-featured--community .dash-nav-icon {
+  color: #c4b5fd;
+}
+
+.dash-nav-featured--community.active {
+  border-color: rgba(196, 181, 253, 0.6);
+  box-shadow: 0 0 32px rgba(168, 85, 247, 0.2);
+}
+
+.dash-nav-featured--community .dash-nav-featured-label {
+  color: #e9d5ff;
+}
+
+.dash-nav-featured--community .dash-nav-featured-badge {
+  color: #a855f7;
+  border-color: rgba(168, 85, 247, 0.35);
+  background: rgba(168, 85, 247, 0.12);
+}
+
+.dash-nav-featured--opportunities {
+  background: linear-gradient(
+    135deg,
+    rgba(251, 146, 60, 0.14) 0%,
+    rgba(124, 58, 237, 0.1) 100%
+  );
+  border-color: rgba(251, 146, 60, 0.35);
+  box-shadow: 0 0 24px rgba(251, 146, 60, 0.08);
+  margin-bottom: 8px;
+}
+
+.dash-nav-featured--opportunities .dash-nav-icon {
+  color: #fdba74;
+}
+
+.dash-nav-featured--opportunities.active {
+  border-color: rgba(251, 146, 60, 0.55);
+  box-shadow: 0 0 32px rgba(251, 146, 60, 0.15);
+}
+
+.dash-nav-featured--opportunities .dash-nav-featured-label {
+  color: #ffedd5;
+}
+
+.dash-nav-featured--opportunities .dash-nav-featured-badge {
+  color: #fb923c;
+  border-color: rgba(251, 146, 60, 0.35);
+  background: rgba(251, 146, 60, 0.12);
+}
+
+.dash-nav-featured--reddit .dash-nav-icon {
+  color: #ff9a4d;
+}
+
+.dash-nav-featured.active .dash-nav-icon {
+  color: #ffb86c;
+}
+
+.dash-nav-featured-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dash-nav-featured-label {
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.3px;
+  color: #ffd4a8;
+  line-height: 1.2;
+}
+
+.dash-nav-featured.active .dash-nav-featured-label {
+  color: #ffe8cc;
+}
+
+.dash-nav-featured-badge {
+  font-family: var(--font-mono);
+  font-size: 8px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #ff8c42;
+  align-self: flex-start;
+  padding: 2px 6px;
+  background: rgba(255, 120, 40, 0.15);
+  border-radius: 2px;
+  border: 1px solid rgba(255, 140, 60, 0.3);
+}
+
+.dash-nav-divider {
+  height: 1px;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 140, 60, 0.25) 20%,
+    var(--border) 50%,
+    transparent
+  );
+  margin: 12px 8px 14px;
+}
+
+.dash-main-reddit,
+.dash-main-community {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 72px);
+}
+
+.dash-main-opportunities {
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 72px);
+}

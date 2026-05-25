@@ -40,19 +40,24 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             log.error("OAuth login failed [{}]: {}", type, exception.getMessage(), exception);
         }
 
-        String code = mapErrorCode(raw, type, exception);
         String registrationId = request.getRequestURI().contains("/github") ? "github" : "google";
+        String code = mapErrorCode(raw, type, exception, registrationId);
         log.error("OAuth failure on callback for provider={}, mappedError={}", registrationId, code);
 
-        String redirect = frontendUrl + "/login?error=" + URLEncoder.encode(code, StandardCharsets.UTF_8);
+        String redirect = frontendUrl + "/login?error=" + URLEncoder.encode(code, StandardCharsets.UTF_8)
+                + "&provider=" + registrationId;
         response.sendRedirect(redirect);
     }
 
-    private String mapErrorCode(String raw, String type, AuthenticationException exception) {
+    private String mapErrorCode(String raw, String type, AuthenticationException exception, String provider) {
         if (exception instanceof OAuth2AuthenticationException oauth2Ex && oauth2Ex.getError() != null) {
             String errorCode = oauth2Ex.getError().getErrorCode();
+            String description = oauth2Ex.getError().getDescription();
+            if (description != null && description.toLowerCase().contains("client secret is invalid")) {
+                return "google".equals(provider) ? "google_secret_invalid" : "github_secret_invalid";
+            }
             if (errorCode != null) {
-                return mapOAuth2ErrorCode(errorCode.toLowerCase());
+                return mapOAuth2ErrorCode(errorCode.toLowerCase(), provider);
             }
         }
 
@@ -61,8 +66,11 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
                 || type.contains("AuthorizationRequestNotFound")) {
             return "session_expired";
         }
+        if (raw.contains("client secret is invalid")) {
+            return "google".equals(provider) ? "google_secret_invalid" : "github_secret_invalid";
+        }
         if (raw.contains("invalid_client") || raw.contains("client secret") || raw.contains("bad credentials")) {
-            return "invalid_client";
+            return "google".equals(provider) ? "google_secret_invalid" : "github_secret_invalid";
         }
         if (raw.contains("invalid_grant") || raw.contains("code_verifier") || raw.contains("pkce")) {
             return "invalid_grant";
@@ -74,15 +82,15 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             return "access_denied";
         }
         if (raw.contains("invalid_token_response") || raw.contains("access token response")) {
-            return "invalid_client";
+            return "google".equals(provider) ? "google_secret_invalid" : "github_secret_invalid";
         }
 
         return "oauth_failed";
     }
 
-    private String mapOAuth2ErrorCode(String errorCode) {
+    private String mapOAuth2ErrorCode(String errorCode, String provider) {
         if (errorCode.contains("invalid_client")) {
-            return "invalid_client";
+            return "google".equals(provider) ? "google_secret_invalid" : "github_secret_invalid";
         }
         if (errorCode.contains("invalid_grant")) {
             return "invalid_grant";
@@ -94,7 +102,7 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
             return "access_denied";
         }
         if (errorCode.contains("invalid_token")) {
-            return "invalid_client";
+            return "google".equals(provider) ? "google_secret_invalid" : "github_secret_invalid";
         }
         return "oauth_failed";
     }

@@ -1,0 +1,23 @@
+{
+  "byCompanyName": {
+    "internshala": "internshala.com",
+    "linkedin jobs": "linkedin.com",
+    "linkedin": "linkedin.com",
+    "google": "google.com",
+    "youtube": "youtube.com",
+    "meta": "meta.com",
+    "netflix": "netflix.com",
+    "adobe": "adobe.com",
+    "canva": "canva.com",
+    "spotify": "spotify.com",
+    "amazon": "amazon.com",
+    "apple": "apple.com",
+    "microsoft": "microsoft.com"
+  },
+  "bySource": {
+    "REDDIT": "reddit.com",
+    "LINKEDIN": "linkedin.com",
+    "INTERNSHALA": "internshala.com",
+    "USER": "hi-vi.vercel.app"
+  }
+}

@@ -5,6 +5,8 @@ import java.util.List;
 
 public record RedditTrendingResponse(
         List<RedditPostDto> posts,
+        RedditPostDto featuredPost,
+        List<RedditPostDto> hiringPosts,
         List<String> subreddits,
         String activeSubreddit,
         int page,

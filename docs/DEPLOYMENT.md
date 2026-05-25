@@ -95,7 +95,9 @@ Vercel runs `npm run build` with `CI=true` — ESLint warnings fail build. Fix l
 
 `backend/render.yaml` documents expected services and env var names for Infrastructure-as-Code style setup.
 
-### Postgres
+### Postgres / schema
+
+Production uses `spring.jpa.hibernate.ddl-auto=update` so new tables (e.g. `community_posts`, `opportunities`) are created on deploy. If you switch to `validate`, run migrations first or the app will fail with `Schema validation: missing table [...]`.
 
 1. Create Render PostgreSQL instance
 2. Link to web service → injects `DATABASE_URL`

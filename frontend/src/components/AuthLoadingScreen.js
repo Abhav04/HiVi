@@ -18,8 +18,15 @@ const HIVI_LOGO = (
   </svg>
 );
 
-const AuthLoadingScreen = ({ provider = 'google', progress = 0, statusText }) => {
+const AuthLoadingScreen = ({
+  provider = 'google',
+  progress = 0,
+  statusText,
+  onSkip,
+  skipAfterMs = 6000,
+}) => {
   const [msgIndex, setMsgIndex] = useState(0);
+  const [showSkip, setShowSkip] = useState(false);
   const providerLabel = provider === 'github' ? 'GitHub' : 'Google';
 
   useEffect(() => {
@@ -28,6 +35,12 @@ const AuthLoadingScreen = ({ provider = 'google', progress = 0, statusText }) =>
     }, 2800);
     return () => clearInterval(id);
   }, []);
+
+  useEffect(() => {
+    if (!onSkip) return undefined;
+    const t = setTimeout(() => setShowSkip(true), skipAfterMs);
+    return () => clearTimeout(t);
+  }, [onSkip, skipAfterMs]);
 
   const displayProgress = Math.min(100, Math.max(0, progress));
 
@@ -66,11 +79,16 @@ const AuthLoadingScreen = ({ provider = 'google', progress = 0, statusText }) =>
             </div>
             <p className="auth-loading-hint">
               {displayProgress < 30
-                ? 'Waking up servers — first visit may take a minute on free hosting'
+                ? 'Waking up servers — usually under 15 seconds'
                 : displayProgress < 85
                   ? 'Establishing secure connection...'
                   : 'Redirecting to sign in...'}
             </p>
+            {showSkip && onSkip && (
+              <button type="button" className="auth-loading-skip" onClick={onSkip}>
+                Continue to sign in now →
+              </button>
+            )}
           </div>
 
           <p className="auth-loading-footer">

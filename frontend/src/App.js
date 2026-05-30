@@ -11,10 +11,12 @@ import CreatorProfilePage from './pages/CreatorProfilePage';
 import HomeFeed from './pages/HomeFeed';
 import OAuthSuccess from "./pages/OAuthSuccess";
 import AuthConnecting from './pages/AuthConnecting';
+import { AuthProvider } from './context/AuthContext';
 import './App.css';
 
 function App() {
   return (
+    <AuthProvider>
     <Router>
       <div className="App">
         <Routes>
@@ -32,6 +34,7 @@ function App() {
         </Routes>
       </div>
     </Router>
+    </AuthProvider>
   );
 }
 

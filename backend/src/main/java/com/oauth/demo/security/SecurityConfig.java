@@ -90,6 +90,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/community/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/opportunities").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/community/posts/*/view").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/community/posts").authenticated()
+                        .requestMatchers(HttpMethod.PATCH, "/api/community/**").authenticated()
+                        .requestMatchers(HttpMethod.DELETE, "/api/community/**").authenticated()
                         .requestMatchers("/api/community/**").authenticated()
                         .requestMatchers("/h2-console/**").permitAll()
                         .anyRequest().authenticated());

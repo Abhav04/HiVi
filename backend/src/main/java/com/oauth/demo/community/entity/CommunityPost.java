@@ -3,6 +3,8 @@ package com.oauth.demo.community.entity;
 import com.oauth.demo.entity.User;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "community_posts", indexes = {
@@ -34,11 +36,24 @@ public class CommunityPost {
     @Column(nullable = false)
     private PostStatus status = PostStatus.PUBLISHED;
 
+    /** Legacy primary media — mirrors first gallery item */
     private String mediaUrl;
     private String thumbnailUrl;
     private String portfolioLink;
 
-    /** Comma-separated edit styles: cinematic, anime, gaming, etc. */
+    @Column(length = 1000)
+    private String externalLink;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "original_post_id")
+    private CommunityPost originalPost;
+
+    private int repostCount = 0;
+
+    @OneToMany(mappedBy = "post", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("sortOrder ASC")
+    private List<PostMedia> mediaItems = new ArrayList<>();
+
     @Column(length = 500)
     private String tags;
 
@@ -71,6 +86,14 @@ public class CommunityPost {
     public void setThumbnailUrl(String thumbnailUrl) { this.thumbnailUrl = thumbnailUrl; }
     public String getPortfolioLink() { return portfolioLink; }
     public void setPortfolioLink(String portfolioLink) { this.portfolioLink = portfolioLink; }
+    public String getExternalLink() { return externalLink; }
+    public void setExternalLink(String externalLink) { this.externalLink = externalLink; }
+    public CommunityPost getOriginalPost() { return originalPost; }
+    public void setOriginalPost(CommunityPost originalPost) { this.originalPost = originalPost; }
+    public int getRepostCount() { return repostCount; }
+    public void setRepostCount(int repostCount) { this.repostCount = repostCount; }
+    public List<PostMedia> getMediaItems() { return mediaItems; }
+    public void setMediaItems(List<PostMedia> mediaItems) { this.mediaItems = mediaItems; }
     public String getTags() { return tags; }
     public void setTags(String tags) { this.tags = tags; }
     public int getLikeCount() { return likeCount; }

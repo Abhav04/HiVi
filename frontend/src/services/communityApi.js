@@ -1,8 +1,14 @@
 import { getApiUrl, getAuthHeaders, getPublicHeaders, clearInvalidToken, isLoggedIn } from '../utils/auth';
 
-function friendlyError(status, body, fallback) {
+function friendlyError(status, body, fallback, { publicFeed = false } = {}) {
   const raw = body?.message || body?.error || fallback;
   if (status === 401) {
+    if (publicFeed) {
+      return 'We could not load the feed right now. Please try again in a moment.';
+    }
+    if (raw?.includes('session expired') || raw?.includes('Session expired')) {
+      return 'Your sign-in has expired. Please sign in again to continue.';
+    }
     if (raw?.includes('Full authentication') || raw?.includes('Unauthorized')) {
       return 'Sign in to unlock the full community experience.';
     }
@@ -14,7 +20,7 @@ function friendlyError(status, body, fallback) {
   return raw || fallback;
 }
 
-async function handleResponse(res, { allowRetry = false } = {}) {
+async function handleResponse(res, { allowRetry = false, publicFeed = false } = {}) {
   if (res.ok) {
     return res.json();
   }
@@ -29,7 +35,7 @@ async function handleResponse(res, { allowRetry = false } = {}) {
     throw err;
   }
 
-  const message = friendlyError(res.status, body, `Request failed (${res.status})`);
+  const message = friendlyError(res.status, body, `Request failed (${res.status})`, { publicFeed });
   const err = new Error(message);
   err.status = res.status;
   throw err;
@@ -41,7 +47,7 @@ export async function fetchCommunityFeed({ mode = 'trending', page = 0, size = 1
 
   // Feed is public — never send a stale JWT (avoids false "session expired" errors)
   const res = await fetch(url, { headers: getPublicHeaders(), cache: 'no-store' });
-  return handleResponse(res);
+  return handleResponse(res, { publicFeed: true });
 }
 
 export async function createCommunityPost(formData) {

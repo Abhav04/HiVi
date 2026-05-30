@@ -127,6 +127,24 @@
   line-height: 1.5;
 }
 
+.auth-loading-skip {
+  margin-top: 14px;
+  padding: 10px 16px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #0f0a1a;
+  background: linear-gradient(135deg, #fb923c, #fbbf24);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.auth-loading-skip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(251, 146, 60, 0.35);
+}
+
 .auth-loading-footer {
   font-size: 10px;
   color: var(--muted);

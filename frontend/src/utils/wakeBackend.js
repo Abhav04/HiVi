@@ -2,18 +2,19 @@ import { getApiUrl } from './auth';
 
 const HEALTH_PATH = '/health';
 
+const retryDelayMs = (attempt) => Math.min(400 + attempt * 150, 2000);
+
 /**
  * Pings the backend until it responds or timeout. Wakes Render free-tier instances.
+ * Default max wait is 12s — long enough for cold start, short enough to feel responsive.
  */
-const retryDelayMs = (attempt) => Math.min(1500 + attempt * 200, 4000);
-
-export async function wakeBackend(apiUrl = getApiUrl(), maxWaitMs = 90000) {
+export async function wakeBackend(apiUrl = getApiUrl(), maxWaitMs = 12000) {
   const deadline = Date.now() + maxWaitMs;
 
   for (let attempt = 1; Date.now() < deadline; attempt += 1) {
     try {
       const controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000);
+      const timeout = setTimeout(() => controller.abort(), 5000);
       const res = await fetch(`${apiUrl}${HEALTH_PATH}`, {
         method: 'GET',
         signal: controller.signal,

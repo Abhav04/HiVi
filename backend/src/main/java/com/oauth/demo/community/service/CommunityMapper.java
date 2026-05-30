@@ -1,16 +1,15 @@
 package com.oauth.demo.community.service;
 
-import com.oauth.demo.community.dto.AuthorSummaryDto;
-import com.oauth.demo.community.dto.CommentDto;
-import com.oauth.demo.community.dto.CommunityPostDto;
-import com.oauth.demo.community.dto.CreatorProfileDto;
+import com.oauth.demo.community.dto.*;
 import com.oauth.demo.community.entity.CommunityPost;
 import com.oauth.demo.community.entity.CreatorProfile;
 import com.oauth.demo.community.entity.PostComment;
+import com.oauth.demo.community.entity.PostMedia;
 import com.oauth.demo.community.repository.CreatorFollowRepository;
 import com.oauth.demo.community.repository.CreatorProfileRepository;
 import com.oauth.demo.community.repository.PostBookmarkRepository;
 import com.oauth.demo.community.repository.PostLikeRepository;
+import com.oauth.demo.community.repository.PostMediaRepository;
 import com.oauth.demo.entity.User;
 import org.springframework.stereotype.Component;
 
@@ -25,22 +24,36 @@ public class CommunityMapper {
     private final PostLikeRepository likeRepository;
     private final PostBookmarkRepository bookmarkRepository;
     private final CreatorFollowRepository followRepository;
+    private final PostMediaRepository mediaRepository;
 
     public CommunityMapper(
             CreatorProfileRepository profileRepository,
             PostLikeRepository likeRepository,
             PostBookmarkRepository bookmarkRepository,
-            CreatorFollowRepository followRepository) {
+            CreatorFollowRepository followRepository,
+            PostMediaRepository mediaRepository) {
         this.profileRepository = profileRepository;
         this.likeRepository = likeRepository;
         this.bookmarkRepository = bookmarkRepository;
         this.followRepository = followRepository;
+        this.mediaRepository = mediaRepository;
     }
 
     public CommunityPostDto toPostDto(CommunityPost post, User viewer) {
         Long viewerId = viewer != null ? viewer.getId() : null;
         boolean liked = viewerId != null && likeRepository.existsByUserIdAndPostId(viewerId, post.getId());
         boolean bookmarked = viewerId != null && bookmarkRepository.existsByUserIdAndPostId(viewerId, post.getId());
+        boolean owned = viewerId != null && post.getAuthor().getId().equals(viewerId);
+
+        RepostSummaryDto repostOf = null;
+        if (post.getOriginalPost() != null) {
+            CommunityPost orig = post.getOriginalPost();
+            repostOf = new RepostSummaryDto(
+                    orig.getId(),
+                    orig.getTitle(),
+                    toAuthorSummary(orig.getAuthor(), viewer)
+            );
+        }
 
         return new CommunityPostDto(
                 post.getId(),
@@ -51,16 +64,45 @@ public class CommunityMapper {
                 post.getMediaUrl(),
                 post.getThumbnailUrl(),
                 post.getPortfolioLink(),
+                post.getExternalLink(),
                 parseTags(post.getTags()),
+                loadMediaDtos(post),
+                repostOf,
+                post.getRepostCount(),
                 post.getLikeCount(),
                 post.getCommentCount(),
                 post.getViewCount(),
                 post.getTrendingScore(),
                 liked,
                 bookmarked,
+                owned,
                 toAuthorSummary(post.getAuthor(), viewer),
-                post.getCreatedAt()
+                post.getCreatedAt(),
+                post.getUpdatedAt()
         );
+    }
+
+    private List<PostMediaDto> loadMediaDtos(CommunityPost post) {
+        List<PostMedia> items = post.getMediaItems();
+        if (items == null || items.isEmpty()) {
+            items = mediaRepository.findByPostIdOrderBySortOrderAsc(post.getId());
+        }
+        if (items.isEmpty() && post.getMediaUrl() != null) {
+            return List.of(new PostMediaDto(
+                    null,
+                    post.getMediaUrl(),
+                    post.getThumbnailUrl(),
+                    post.getPostType() == com.oauth.demo.community.entity.PostType.VIDEO ? "VIDEO" : "IMAGE",
+                    0
+            ));
+        }
+        return items.stream().map(m -> new PostMediaDto(
+                m.getId(),
+                m.getMediaUrl(),
+                m.getThumbnailUrl(),
+                m.getMediaKind().name(),
+                m.getSortOrder()
+        )).toList();
     }
 
     public AuthorSummaryDto toAuthorSummary(User user, User viewer) {

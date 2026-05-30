@@ -35,4 +35,11 @@ public interface CommunityPostRepository extends JpaRepository<CommunityPost, Lo
 
     List<CommunityPost> findTop6ByStatusAndPostTypeOrderByTrendingScoreDesc(
             PostStatus status, com.oauth.demo.community.entity.PostType postType);
+
+    Page<CommunityPost> findByAuthorIdAndStatusOrderByUpdatedAtDesc(
+            Long authorId, PostStatus status, Pageable pageable);
+
+    Page<CommunityPost> findByAuthorIdOrderByUpdatedAtDesc(Long authorId, Pageable pageable);
+
+    java.util.Optional<CommunityPost> findByIdAndAuthorId(Long id, Long authorId);
 }

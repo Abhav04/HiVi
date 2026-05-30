@@ -12,13 +12,19 @@ public record CommunityPostDto(
         String mediaUrl,
         String thumbnailUrl,
         String portfolioLink,
+        String externalLink,
         List<String> tags,
+        List<PostMediaDto> mediaItems,
+        RepostSummaryDto repostOf,
+        int repostCount,
         int likeCount,
         int commentCount,
         int viewCount,
         double trendingScore,
         boolean likedByMe,
         boolean bookmarkedByMe,
+        boolean ownedByMe,
         AuthorSummaryDto author,
-        LocalDateTime createdAt
+        LocalDateTime createdAt,
+        LocalDateTime updatedAt
 ) {}

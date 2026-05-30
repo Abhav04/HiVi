@@ -40,9 +40,9 @@ const ERROR_MAP = {
     type: 'config',
     title: 'Google redirect URI mismatch',
     message:
-      'Error 400: redirect_uri_mismatch — the callback URL your local backend uses is not listed in Google Cloud Console.',
+      'Error 400: redirect_uri_mismatch — Google received a callback URL that is not registered for your OAuth client.',
     action:
-      'Add http://localhost:8080/login/oauth2/code/google to Authorized redirect URIs (must match exactly, including http and port 8080).',
+      'Open Google Cloud Console → Credentials → the OAuth client that matches GOOGLE_CLIENT_ID on Render → Authorized redirect URIs → add the exact production URL below (and localhost if you develop locally).',
   },
   access_denied: {
     type: 'user',

@@ -45,6 +45,30 @@ public class CommunityController {
         return postService.getFeed(mode, page, size, userService.optionalUser(auth));
     }
 
+    @GetMapping("/posts/{postId}")
+    public CommunityPostDto getPost(@PathVariable Long postId, Authentication auth) {
+        return postService.getPost(postId, userService.optionalUser(auth));
+    }
+
+    @GetMapping("/posts/me")
+    public CommunityFeedResponse myPosts(
+            @RequestParam(defaultValue = "ALL") String status,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication auth
+    ) {
+        return postService.getMyPosts(userService.requireUser(auth), status, page, size);
+    }
+
+    @GetMapping("/bookmarks")
+    public CommunityFeedResponse bookmarks(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            Authentication auth
+    ) {
+        return postService.getBookmarks(userService.requireUser(auth), page, size);
+    }
+
     @PostMapping("/posts")
     public CommunityPostDto createPost(
             @RequestParam String title,
@@ -52,13 +76,58 @@ public class CommunityController {
             @RequestParam(defaultValue = "TEXT") String postType,
             @RequestParam(required = false) String tags,
             @RequestParam(required = false) String portfolioLink,
+            @RequestParam(required = false) String externalLink,
             @RequestParam(defaultValue = "false") boolean draft,
             @RequestParam(required = false) MultipartFile media,
             @RequestParam(required = false) MultipartFile thumbnail,
+            @RequestParam(required = false) MultipartFile[] mediaFiles,
             Authentication auth
     ) throws IOException {
         User user = userService.requireUser(auth);
-        return postService.createPost(user, title, content, postType, tags, portfolioLink, draft, media, thumbnail);
+        return postService.createPost(
+                user, title, content, postType, tags, portfolioLink, externalLink,
+                draft, media, thumbnail, mediaFiles);
+    }
+
+    @PatchMapping("/posts/{postId}")
+    public CommunityPostDto updatePost(
+            @PathVariable Long postId,
+            @RequestParam(required = false) String title,
+            @RequestParam(required = false) String content,
+            @RequestParam(required = false) String postType,
+            @RequestParam(required = false) String tags,
+            @RequestParam(required = false) String portfolioLink,
+            @RequestParam(required = false) String externalLink,
+            @RequestParam(required = false) Boolean draft,
+            @RequestParam(required = false) MultipartFile media,
+            @RequestParam(required = false) MultipartFile thumbnail,
+            @RequestParam(required = false) MultipartFile[] mediaFiles,
+            Authentication auth
+    ) throws IOException {
+        return postService.updatePost(
+                userService.requireUser(auth), postId, title, content, postType, tags,
+                portfolioLink, externalLink, draft, media, thumbnail, mediaFiles);
+    }
+
+    @DeleteMapping("/posts/{postId}")
+    public ResponseEntity<Void> deletePost(@PathVariable Long postId, Authentication auth) {
+        postService.deletePost(userService.requireUser(auth), postId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/posts/{postId}/publish")
+    public CommunityPostDto publishDraft(@PathVariable Long postId, Authentication auth) {
+        return postService.publishDraft(userService.requireUser(auth), postId);
+    }
+
+    @PostMapping("/posts/{postId}/repost")
+    public CommunityPostDto repost(
+            @PathVariable Long postId,
+            @RequestBody(required = false) Map<String, String> body,
+            Authentication auth
+    ) {
+        String quote = body != null ? body.get("quote") : null;
+        return postService.repost(userService.requireUser(auth), postId, quote);
     }
 
     @PostMapping("/posts/{postId}/view")

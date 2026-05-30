@@ -1,7 +1,8 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Navbar from '../Navbar';
-import { getUser, clearUser, getInitials } from '../../utils/auth';
+import { getInitials } from '../../utils/auth';
+import { useAuth } from '../../context/AuthContext';
 import '../../pages/Dashboard.css';
 import './DashboardLayout.css';
 
@@ -85,7 +86,8 @@ const TabIcon = ({ type }) => {
 const DashboardLayout = ({ children, activeTab, onTabChange }) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const user = getUser() || { name: 'Guest', email: '', role: 'client' };
+  const { ready, isAuthenticated, user: authUser, logout: authLogout } = useAuth();
+  const user = (isAuthenticated && authUser) || { name: 'Guest', email: '', role: 'client' };
   const initials = getInitials(user.name);
   const roleLabel = user.role === 'editor' ? 'editor account' : 'client account';
   const isRedditPage = location.pathname === '/reddit-trends';
@@ -93,7 +95,7 @@ const DashboardLayout = ({ children, activeTab, onTabChange }) => {
   const isOpportunitiesPage = location.pathname.startsWith('/opportunities');
 
   const handleSignOut = () => {
-    clearUser();
+    authLogout();
     navigate('/');
   };
 
@@ -111,14 +113,20 @@ const DashboardLayout = ({ children, activeTab, onTabChange }) => {
       <div className="dashboard-inner">
         <aside className="dash-sidebar">
           <div className="dash-user animate-fadeUp">
-            <div className="dash-avatar">{initials}</div>
-            <div>
-              <div className="dash-name">{user.name}</div>
-              <div className="dash-role">
-                <span className="dash-dot" />
-                {roleLabel}
-              </div>
-            </div>
+            {!ready ? (
+              <div className="dash-user-skeleton shimmer" aria-hidden />
+            ) : (
+              <>
+                <div className="dash-avatar">{initials}</div>
+                <div>
+                  <div className="dash-name">{user.name}</div>
+                  <div className="dash-role">
+                    <span className="dash-dot" />
+                    {isAuthenticated ? roleLabel : 'sign in to continue'}
+                  </div>
+                </div>
+              </>
+            )}
           </div>
 
           <nav className="dash-nav">

@@ -4,6 +4,8 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import com.oauth.demo.controller.OAuthBeginController;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
@@ -44,9 +46,26 @@ public class OAuth2LoginFailureHandler implements AuthenticationFailureHandler {
         String code = mapErrorCode(raw, type, exception, registrationId);
         log.error("OAuth failure on callback for provider={}, mappedError={}", registrationId, code);
 
-        String redirect = frontendUrl + "/login?error=" + URLEncoder.encode(code, StandardCharsets.UTF_8)
+        String returnFrontend = resolveReturnFrontend(request);
+        String redirect = returnFrontend + "/login?error=" + URLEncoder.encode(code, StandardCharsets.UTF_8)
                 + "&provider=" + registrationId;
+        if ("redirect_uri".equals(code)) {
+            redirect += "&detail=" + URLEncoder.encode(
+                    "redirect_uri_mismatch — add the exact callback URL from /oauth/status to Google Cloud Console",
+                    StandardCharsets.UTF_8);
+        }
         response.sendRedirect(redirect);
+    }
+
+    private String resolveReturnFrontend(HttpServletRequest request) {
+        HttpSession session = request.getSession(false);
+        if (session != null) {
+            Object stored = session.getAttribute(OAuthBeginController.SESSION_FRONTEND_RETURN);
+            if (stored instanceof String url && !url.isBlank()) {
+                return url;
+            }
+        }
+        return frontendUrl;
     }
 
     private String mapErrorCode(String raw, String type, AuthenticationException exception, String provider) {

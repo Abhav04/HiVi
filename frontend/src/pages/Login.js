@@ -1,14 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import OAuthErrorCard from '../components/OAuthErrorCard';
-import { getApiUrl } from '../utils/auth';
+import { getApiUrl, nameFromEmail, deriveUsername } from '../utils/auth';
 import { parseOAuthError } from '../utils/oauthErrors';
 import { fetchOAuthStatus, getOAuthBlockers, getOAuthConfigAction } from '../utils/oauthStatus';
 import { signInWithCredentials } from '../utils/credentialsLogin';
+import { useAuth } from '../context/AuthContext';
+import { quickHealthCheck, buildOAuthBeginUrl } from '../utils/oauthFlow';
 import './Auth.css';
 
 const Login = () => {
   const navigate = useNavigate();
+  const { login, isAuthenticated, ready } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const oauthErrorRaw = searchParams.get('error');
   const apiUrl = getApiUrl();
@@ -16,7 +19,7 @@ const Login = () => {
   const [oauthStatus, setOauthStatus] = useState(null);
   const [configError, setConfigError] = useState(null);
 
-  const startOAuth = (provider) => {
+  const startOAuth = async (provider) => {
     const blockers = getOAuthBlockers(oauthStatus, provider, apiUrl);
     if (blockers.length > 0) {
       setConfigError({
@@ -28,6 +31,12 @@ const Login = () => {
       return;
     }
     setConfigError(null);
+
+    const warm = await quickHealthCheck(apiUrl, 2000);
+    if (warm) {
+      window.location.href = buildOAuthBeginUrl(provider);
+      return;
+    }
     navigate(`/auth/connecting?provider=${provider}`);
   };
 
@@ -44,6 +53,12 @@ const Login = () => {
       .then(setOauthStatus)
       .catch(() => {});
   }, [apiUrl]);
+
+  useEffect(() => {
+    if (ready && isAuthenticated) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [ready, isAuthenticated, navigate]);
 
   const [form, setForm] = useState({ email: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -70,7 +85,18 @@ const Login = () => {
     setLoading(true);
     setConfigError(null);
     try {
-      await signInWithCredentials(form.email, form.password);
+      const { token, username, role } = await signInWithCredentials(form.email, form.password);
+      login(
+        {
+          name: nameFromEmail(form.email),
+          email: form.email,
+          username: username || deriveUsername(form.email),
+          role: role || 'client',
+          provider: 'local',
+          projects: [],
+        },
+        token
+      );
       navigate('/dashboard');
     } catch (err) {
       setConfigError({

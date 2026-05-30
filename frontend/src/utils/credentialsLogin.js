@@ -1,4 +1,4 @@
-import { getApiUrl, saveUser, nameFromEmail } from './auth';
+import { getApiUrl, saveUser, nameFromEmail, deriveUsername, setToken } from './auth';
 
 /** Map login form email to backend username (demo users use username, not email). */
 export function resolveLoginUsername(emailOrUsername) {
@@ -40,7 +40,7 @@ export async function signInWithCredentials(emailOrUsername, password) {
     throw new Error('Sign-in succeeded but no token was returned.');
   }
 
-  localStorage.setItem('token', token);
+  setToken(token);
 
   const displayEmail = emailOrUsername.includes('@') ? emailOrUsername : username;
   const roleRaw = Array.isArray(body.roles) && body.roles[0] ? body.roles[0] : 'client';
@@ -49,6 +49,7 @@ export async function signInWithCredentials(emailOrUsername, password) {
   saveUser({
     name: nameFromEmail(displayEmail),
     email: displayEmail,
+    username: body.username || deriveUsername(displayEmail),
     role,
     provider: 'local',
     projects: [],

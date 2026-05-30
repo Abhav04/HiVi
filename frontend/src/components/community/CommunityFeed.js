@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { fetchCommunityFeed } from '../../services/communityApi';
-import { isLoggedIn } from '../../utils/auth';
+import { useAuth } from '../../context/AuthContext';
 import CommunityPostCard from './CommunityPostCard';
 import PostComposer from './PostComposer';
 import FeedSidebar from './FeedSidebar';
@@ -20,7 +20,7 @@ const CommunityFeed = () => {
   const [showComposer, setShowComposer] = useState(false);
   const [error, setError] = useState(null);
   const [authHint, setAuthHint] = useState(false);
-  const loggedIn = isLoggedIn();
+  const { isAuthenticated: loggedIn } = useAuth();
   const loaderRef = useRef(null);
 
   const load = useCallback(async (feedMode, pageNum, append) => {
@@ -39,7 +39,7 @@ const CommunityFeed = () => {
       }
       setHasMore(data.hasMore);
     } catch (err) {
-      setAuthHint(err.status === 401);
+      setAuthHint(false);
       const msg = err.message || 'Could not load the feed';
       setError(
         msg.includes('Failed to fetch') || msg.includes('NetworkError')
@@ -58,9 +58,13 @@ const CommunityFeed = () => {
   }, []);
 
   useEffect(() => {
+    if (mode === 'following' && !loggedIn) {
+      setMode('trending');
+      return;
+    }
     setPage(0);
     load(mode, 0, false);
-  }, [mode, load]);
+  }, [mode, load, loggedIn]);
 
   useEffect(() => {
     if (!hasMore || loading || loadingMore) return undefined;
@@ -110,7 +114,12 @@ const CommunityFeed = () => {
                 key={m}
                 type="button"
                 className={`community-feed-tab ${mode === m ? 'active' : ''}`}
-                onClick={() => setMode(m)}
+                onClick={() => {
+                  if (m === 'following' && !loggedIn) return;
+                  setMode(m);
+                }}
+                disabled={m === 'following' && !loggedIn}
+                title={m === 'following' && !loggedIn ? 'Sign in to see creators you follow' : undefined}
               >
                 {m === 'trending' ? 'For you' : 'Following'}
               </button>

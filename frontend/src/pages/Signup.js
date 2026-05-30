@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { saveUser } from '../utils/auth';
+import { useAuth } from '../context/AuthContext';
+import { signUpWithCredentials } from '../utils/credentialsSignup';
 import './Auth.css';
 
 const Signup = () => {
   const navigate = useNavigate();
+  const { login } = useAuth();
   const [role, setRole] = useState('');
   const [step, setStep] = useState(1); // 1: role select, 2: form
   const [form, setForm] = useState({ name: '', email: '', password: '', confirm: '' });
@@ -33,18 +35,20 @@ const Signup = () => {
     const e = validate();
     if (Object.keys(e).length) { setErrors(e); return; }
     setLoading(true);
-    await new Promise(r => setTimeout(r, 2000));
-    setLoading(false);
-
-    saveUser({
-      name: form.name.trim(),
-      email: form.email,
-      role: role || 'client',
-      provider: 'local',
-      projects: [],
-    });
-
-    navigate('/dashboard');
+    try {
+      const { user, token } = await signUpWithCredentials({
+        name: form.name.trim(),
+        email: form.email,
+        password: form.password,
+        role: role || 'client',
+      });
+      login(user, token);
+      navigate('/dashboard');
+    } catch (err) {
+      setErrors({ form: err.message || 'Sign up failed. Try a different email.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const pwStrength = () => {
@@ -289,6 +293,8 @@ const Signup = () => {
                   <button type="button" className="auth-link">terms of service</button> and{' '}
                   <button type="button" className="auth-link">privacy policy</button>
                 </p>
+
+                {errors.form && <p className="field-error auth-form-error">{errors.form}</p>}
 
                 <button
                   className={`auth-submit ${loading ? 'loading' : ''}`}

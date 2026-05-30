@@ -1,10 +1,13 @@
 package com.oauth.demo.community.service;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -13,6 +16,8 @@ import java.util.UUID;
 
 @Service
 public class CommunityMediaStorageService {
+
+    private static final Logger log = LoggerFactory.getLogger(CommunityMediaStorageService.class);
 
     private static final Set<String> IMAGE_TYPES = Set.of(
             "image/jpeg", "image/png", "image/webp", "image/gif"
@@ -25,11 +30,43 @@ public class CommunityMediaStorageService {
 
     public CommunityMediaStorageService(
             @Value("${community.media.upload-dir:uploads/community}") String uploadDir) {
-        this.uploadRoot = Paths.get(uploadDir).toAbsolutePath().normalize();
+        this.uploadRoot = resolveWritableRoot(uploadDir);
+    }
+
+    private static Path resolveWritableRoot(String configuredDir) {
+        Path primary = Paths.get(configuredDir).toAbsolutePath().normalize();
+        Path created = tryCreateRoot(primary);
+        if (created != null) {
+            return created;
+        }
+
+        Path fallback = Paths.get(System.getProperty("java.io.tmpdir", "/tmp"))
+                .resolve("uploads")
+                .resolve("community")
+                .toAbsolutePath()
+                .normalize();
+        if (!fallback.equals(primary)) {
+            log.warn("Upload dir not writable ({}), falling back to {}", primary, fallback);
+            created = tryCreateRoot(fallback);
+            if (created != null) {
+                return created;
+            }
+        }
+
+        throw new IllegalStateException(
+                "Could not create upload directory. Tried: " + primary + " and " + fallback);
+    }
+
+    private static Path tryCreateRoot(Path root) {
         try {
-            Files.createDirectories(uploadRoot);
+            Files.createDirectories(root);
+            return root;
+        } catch (AccessDeniedException ex) {
+            log.debug("No permission to create upload dir: {}", root);
+            return null;
         } catch (IOException ex) {
-            throw new IllegalStateException("Could not create upload directory: " + uploadRoot, ex);
+            log.debug("Could not create upload dir {}: {}", root, ex.getMessage());
+            return null;
         }
     }
 

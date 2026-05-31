@@ -127,31 +127,59 @@
 }
 
 .post-composer-error {
-  color: #e8a09a;
-  font-size: 12px;
+  color: #fca5a5;
+  font-size: 14px;
   margin-bottom: 10px;
 }
 
-.post-composer-submit {
-  width: 100%;
+.post-composer-success {
+  color: #86efac;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.post-composer-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+}
+
+.post-composer-draft-btn {
+  flex: 1;
   padding: 12px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  letter-spacing: 0.5px;
-  text-transform: lowercase;
-  background: linear-gradient(135deg, rgba(168, 85, 247, 0.35) 0%, rgba(255, 120, 40, 0.25) 100%);
-  border: 1px solid rgba(168, 85, 247, 0.4);
-  color: var(--white);
+  font-size: 14px;
+  font-weight: 500;
+  background: transparent;
+  border: 1px solid var(--border2);
+  color: var(--muted2);
   border-radius: 8px;
   cursor: pointer;
-  transition: box-shadow 0.25s ease;
+}
+
+.post-composer-draft-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+  color: var(--white);
+}
+
+.post-composer-submit {
+  flex: 2;
+  padding: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  background: var(--gold);
+  border: none;
+  color: var(--black);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s ease;
 }
 
 .post-composer-submit:hover:not(:disabled) {
-  box-shadow: 0 0 28px rgba(168, 85, 247, 0.2);
+  background: var(--gold2);
 }
 
-.post-composer-submit:disabled {
+.post-composer-submit:disabled,
+.post-composer-draft-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
 }

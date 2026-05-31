@@ -81,8 +81,16 @@ const CommunityFeed = () => {
     return () => obs.disconnect();
   }, [hasMore, loading, loadingMore, mode, load]);
 
-  const handlePosted = () => {
+  const handlePosted = (newPost) => {
     setShowComposer(false);
+    setError(null);
+    if (newPost && newPost.status !== 'DRAFT') {
+      setPosts((prev) => {
+        const exists = prev.some((p) => p.id === newPost.id);
+        return exists ? prev : [newPost, ...prev];
+      });
+      setFeatured((prev) => prev || newPost);
+    }
     load(mode, 0, false);
   };
 

@@ -11,13 +11,6 @@ const GUEST_LINKS = [
   { href: '#hire', label: 'hire', hash: true },
 ];
 
-const AUTH_LINKS = [
-  { to: '/community', label: 'community' },
-  { to: '/opportunities', label: 'opportunities' },
-  { to: '/reddit-trends', label: 'trends' },
-  { to: '/dashboard', label: 'dashboard' },
-];
-
 const Navbar = ({ transparent = false }) => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -35,8 +28,6 @@ const Navbar = ({ transparent = false }) => {
     setMenuOpen(false);
   }, [location.pathname, isAuthenticated]);
 
-  const isActive = (path) => location.pathname === path || location.pathname.startsWith(`${path}/`);
-
   const handleMobileLogout = () => {
     setMenuOpen(false);
     logout();
@@ -46,7 +37,7 @@ const Navbar = ({ transparent = false }) => {
   const showAuthChrome = ready && isAuthenticated;
 
   return (
-    <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${transparent ? 'transparent' : ''}`}>
+    <nav className={`navbar ${scrolled ? 'scrolled' : ''} ${transparent ? 'transparent' : ''} ${showAuthChrome ? 'navbar--app' : ''}`}>
       <div className="navbar-inner">
         <Link to={showAuthChrome ? '/dashboard' : '/'} className="navbar-logo">
           <div className="logo-icon">
@@ -59,37 +50,21 @@ const Navbar = ({ transparent = false }) => {
           <span className="logo-text">HIVI</span>
         </Link>
 
-        <div className="navbar-links">
-          {!ready ? (
-            <span className="navbar-links-skeleton" aria-hidden />
-          ) : showAuthChrome ? (
-            AUTH_LINKS.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`nav-link ${isActive(link.to) ? 'active' : ''}`}
-              >
-                <span>{link.label}</span>
-              </Link>
-            ))
-          ) : (
-            GUEST_LINKS.map((link) =>
-              link.hash ? (
+        {!showAuthChrome && (
+          <div className="navbar-links">
+            {!ready ? (
+              <span className="navbar-links-skeleton" aria-hidden />
+            ) : (
+              GUEST_LINKS.map((link) => (
                 <a key={link.href} href={link.href} className="nav-link">
                   <span>{link.label}</span>
                 </a>
-              ) : (
-                <Link
-                  key={link.to}
-                  to={link.to}
-                  className={`nav-link ${isActive(link.to) ? 'active' : ''}`}
-                >
-                  <span>{link.label}</span>
-                </Link>
-              )
-            )
-          )}
-        </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {showAuthChrome && <div className="navbar-spacer" aria-hidden />}
 
         {!ready ? (
           <div className="navbar-cta navbar-cta--skeleton" aria-hidden />
@@ -122,33 +97,23 @@ const Navbar = ({ transparent = false }) => {
                 <p className="mobile-user-email">{user?.email}</p>
               </div>
             </div>
-            {AUTH_LINKS.map((link) => (
-              <Link
-                key={link.to}
-                to={link.to}
-                className={`mobile-link ${isActive(link.to) ? 'active' : ''}`}
-                onClick={() => setMenuOpen(false)}
-              >
-                {link.label}
-              </Link>
-            ))}
+            <Link to="/dashboard?tab=profile" className="mobile-link" onClick={() => setMenuOpen(false)}>
+              Profile
+            </Link>
+            <Link to="/dashboard?tab=profile" className="mobile-link" onClick={() => setMenuOpen(false)}>
+              Settings
+            </Link>
             <button type="button" className="mobile-link mobile-link--logout" onClick={handleMobileLogout}>
-              sign out
+              Logout
             </button>
           </>
         ) : (
           <>
-            {GUEST_LINKS.map((link) =>
-              link.hash ? (
-                <a key={link.href} href={link.href} className="mobile-link" onClick={() => setMenuOpen(false)}>
-                  {link.label}
-                </a>
-              ) : (
-                <Link key={link.to} to={link.to} className="mobile-link" onClick={() => setMenuOpen(false)}>
-                  {link.label}
-                </Link>
-              )
-            )}
+            {GUEST_LINKS.map((link) => (
+              <a key={link.href} href={link.href} className="mobile-link" onClick={() => setMenuOpen(false)}>
+                {link.label}
+              </a>
+            ))}
             <div className="mobile-cta">
               <Link to="/login" className="btn-ghost" onClick={() => setMenuOpen(false)}>sign in</Link>
               <Link to="/signup" className="btn-gold" onClick={() => setMenuOpen(false)}>get started</Link>

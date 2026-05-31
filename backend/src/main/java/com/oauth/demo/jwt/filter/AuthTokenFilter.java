@@ -92,6 +92,9 @@ public class AuthTokenFilter extends OncePerRequestFilter {//this class is used 
                 || path.startsWith("/h2-console")) {
             return true;
         }
+        if (path.startsWith("/api/public")) {
+            return true;
+        }
         if (path.startsWith("/api/community") && "GET".equalsIgnoreCase(method)) {
             return true;
         }

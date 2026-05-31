@@ -259,10 +259,28 @@ public class CommunityDemoSeeder {
                         null, 612, 38, 4100, 20),
                 new DemoPost("Hiring: need reel editor for fitness brand",
                         "Paid project — 8 reels/month. Must understand hook retention & captions.",
-                        PostType.TEXT, "hiring, paid work, reels",
+                        PostType.HIRING, "hiring, paid work, reels",
                         null,
                         "https://images.unsplash.com/photo-1517836357463-d25dfeac3438?w=1200&q=80",
-                        null, 98, 14, 420, 1)
+                        null, 98, 14, 420, 1),
+                new DemoPost("Tutorial: masking hair in 4K without artifacts",
+                        "Step-by-step breakdown of my go-to technique in After Effects + Mocha.",
+                        PostType.TUTORIAL, "tutorial, after effects",
+                        "https://images.unsplash.com/photo-1478720568477-152d9b8e6839?w=1200&q=80",
+                        "https://images.unsplash.com/photo-1478720568477-152d9b8e6839?w=1200&q=80",
+                        null, 421, 56, 2800, 16),
+                new DemoPost("Before / After — luxury product spot (30s)",
+                        "Client wanted a colder grade with sharper highlights. Swipe for the reveal.",
+                        PostType.BEFORE_AFTER, "commercial, color grading",
+                        "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=1200&q=80",
+                        "https://images.unsplash.com/photo-1611162616475-46b635cb6868?w=1200&q=80",
+                        null, 734, 62, 3900, 22),
+                new DemoPost("Open for collab — music video editors",
+                        "Building a roster for Q3 releases. Drop your reel + preferred genres.",
+                        PostType.COLLABORATION, "collaboration, music video",
+                        null,
+                        "https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1200&q=80",
+                        null, 187, 41, 1100, 5)
         );
     }
 

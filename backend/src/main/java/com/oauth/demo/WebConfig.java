@@ -26,7 +26,7 @@ public class WebConfig {
                                 frontendUrl,
                                 "https://hi-vi.vercel.app",
                                 "https://*.vercel.app")
-                        .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                        .allowedMethods("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS")
                         .allowedHeaders("*")
                         .allowCredentials(true);
 

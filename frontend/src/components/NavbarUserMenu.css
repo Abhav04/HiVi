@@ -6,6 +6,30 @@
   position: relative;
 }
 
+.navbar-user--minimal {
+  gap: 0;
+}
+
+.navbar-user-avatar-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border: 2px solid rgba(201, 168, 76, 0.35);
+  border-radius: 50%;
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.navbar-user-avatar-btn:hover,
+.navbar-user-avatar-btn.open {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.15);
+}
+
 .navbar-user-icon-btn {
   position: relative;
   display: flex;

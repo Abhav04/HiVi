@@ -11,9 +11,10 @@ const PostComposer = ({ onPosted, onClose }) => {
   const [portfolioLink, setPortfolioLink] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [media, setMedia] = useState(null);
-  const [draft, setDraft] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [error, setError] = useState(null);
+  const [success, setSuccess] = useState(false);
 
   const toggleTag = (tag) => {
     setSelectedTags((prev) =>
@@ -21,31 +22,52 @@ const PostComposer = ({ onPosted, onClose }) => {
     );
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const submitPost = async (asDraft) => {
+    const trimmedTitle = title.trim();
+    if (!trimmedTitle) {
+      setError('Add a title for your post.');
+      return;
+    }
     setSubmitting(true);
+    setPublishing(!asDraft);
     setError(null);
+    setSuccess(false);
     try {
       const fd = new FormData();
-      fd.append('title', title);
-      fd.append('content', content);
+      fd.append('title', trimmedTitle);
+      fd.append('content', content.trim());
       fd.append('postType', postType);
       fd.append('tags', selectedTags.join(','));
-      fd.append('portfolioLink', portfolioLink);
-      fd.append('draft', String(draft));
+      fd.append('portfolioLink', portfolioLink.trim());
+      fd.append('draft', String(asDraft));
       if (media) fd.append('media', media);
       const post = await createCommunityPost(fd);
+      setSuccess(true);
       onPosted?.(post);
       setTitle('');
       setContent('');
       setMedia(null);
       setSelectedTags([]);
-      onClose?.();
+      setPortfolioLink('');
+      if (!asDraft) {
+        setTimeout(() => onClose?.(), 400);
+      }
     } catch (err) {
-      setError(err.message || 'Could not create post. Sign in and try again.');
+      setError(err.message || 'Could not publish. Sign in and try again.');
     } finally {
       setSubmitting(false);
+      setPublishing(false);
     }
+  };
+
+  const handlePublish = (e) => {
+    e.preventDefault();
+    submitPost(false);
+  };
+
+  const handleSaveDraft = (e) => {
+    e.preventDefault();
+    submitPost(true);
   };
 
   return (
@@ -59,7 +81,7 @@ const PostComposer = ({ onPosted, onClose }) => {
         )}
       </div>
 
-      <form onSubmit={handleSubmit} className="post-composer-form">
+      <form onSubmit={handlePublish} className="post-composer-form">
         <div className="post-composer-types">
           {['TEXT', 'IMAGE', 'VIDEO', 'PORTFOLIO'].map((t) => (
             <button
@@ -119,16 +141,17 @@ const PostComposer = ({ onPosted, onClose }) => {
           {media && <em>{media.name}</em>}
         </label>
 
-        <label className="post-composer-draft">
-          <input type="checkbox" checked={draft} onChange={(e) => setDraft(e.target.checked)} />
-          save as draft
-        </label>
-
         {error && <p className="post-composer-error">{error}</p>}
+        {success && <p className="post-composer-success">Published to the community feed.</p>}
 
-        <button type="submit" className="post-composer-submit" disabled={submitting}>
-          {submitting ? 'publishing…' : draft ? 'save draft' : 'publish to community →'}
-        </button>
+        <div className="post-composer-actions">
+          <button type="button" className="post-composer-draft-btn" disabled={submitting} onClick={handleSaveDraft}>
+            {submitting && !publishing ? 'Saving…' : 'Save draft'}
+          </button>
+          <button type="submit" className="post-composer-submit" disabled={submitting}>
+            {publishing ? 'Publishing…' : 'Publish'}
+          </button>
+        </div>
       </form>
     </div>
   );

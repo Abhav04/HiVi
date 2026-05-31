@@ -41,13 +41,27 @@ async function handleResponse(res, { allowRetry = false, publicFeed = false } = 
   throw err;
 }
 
+async function fetchPublic(path, fetchOptions = {}) {
+  const res = await fetch(`${getApiUrl()}${path}`, {
+    ...fetchOptions,
+    headers: { ...getPublicHeaders(), ...fetchOptions.headers },
+    cache: 'no-store',
+  });
+  return handleResponse(res, { publicFeed: true });
+}
+
+export async function ensureCommunityDemo() {
+  try {
+    await fetch(`${getApiUrl()}/api/public/community/ensure-demo`, { method: 'POST' });
+  } catch {
+    /* non-blocking */
+  }
+}
+
 export async function fetchCommunityFeed({ mode = 'trending', page = 0, size = 15 } = {}) {
   const params = new URLSearchParams({ mode, page: String(page), size: String(size) });
-  const url = `${getApiUrl()}/api/community/feed?${params}`;
-
-  // Feed is public — never send a stale JWT (avoids false "session expired" errors)
-  const res = await fetch(url, { headers: getPublicHeaders(), cache: 'no-store' });
-  return handleResponse(res, { publicFeed: true });
+  await ensureCommunityDemo();
+  return fetchPublic(`/api/public/community/feed?${params}`);
 }
 
 export async function createCommunityPost(formData) {
@@ -58,7 +72,17 @@ export async function createCommunityPost(formData) {
     headers,
     body: formData,
   });
-  return handleResponse(res);
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401) {
+      clearInvalidToken();
+    }
+    const message = friendlyError(res.status, body, 'Could not publish your post.');
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
+  }
+  return body;
 }
 
 export async function toggleLike(postId) {
@@ -78,10 +102,7 @@ export async function toggleBookmark(postId) {
 }
 
 export async function fetchComments(postId) {
-  const res = await fetch(`${getApiUrl()}/api/community/posts/${postId}/comments`, {
-    headers: getPublicHeaders(),
-  });
-  return handleResponse(res);
+  return fetchPublic(`/api/public/community/posts/${postId}/comments`);
 }
 
 export async function addComment(postId, content, parentId = null) {
@@ -102,9 +123,13 @@ export async function toggleFollow(userId) {
 }
 
 export async function fetchCreatorProfile(username) {
-  const headers = isLoggedIn() ? getAuthHeaders() : getPublicHeaders();
-  const res = await fetch(`${getApiUrl()}/api/community/profiles/${username}`, { headers });
-  return handleResponse(res, { allowRetry: true });
+  if (isLoggedIn()) {
+    const res = await fetch(`${getApiUrl()}/api/community/profiles/${username}`, {
+      headers: getAuthHeaders(),
+    });
+    return handleResponse(res, { allowRetry: true });
+  }
+  return fetchPublic(`/api/public/community/profiles/${username}`);
 }
 
 export async function recordPostView(postId) {

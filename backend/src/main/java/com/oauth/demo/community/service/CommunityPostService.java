@@ -366,6 +366,12 @@ public class CommunityPostService {
         profileRepository.findByUserId(author.getId()).orElseGet(() -> {
             CreatorProfile profile = new CreatorProfile();
             profile.setUser(author);
+            String name = author.getDisplayName() != null ? author.getDisplayName() : author.getUsername();
+            profile.setBio("Video editor on HiVi — sharing cuts, reels, and client work.");
+            profile.setNiche("video editing");
+            profile.setAvatarUrl("https://ui-avatars.com/api/?name="
+                    + name.replace(" ", "+") + "&background=1a1028&color=c9a84c&size=256&bold=true");
+            profile.setAvailableForWork(true);
             profile.setCreatedAt(LocalDateTime.now());
             profile.setUpdatedAt(LocalDateTime.now());
             return profileRepository.save(profile);

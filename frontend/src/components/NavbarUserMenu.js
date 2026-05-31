@@ -41,19 +41,17 @@ const NavbarUserMenu = () => {
   if (!user) return null;
 
   return (
-    <div className="navbar-user" ref={rootRef}>
+    <div className="navbar-user navbar-user--minimal" ref={rootRef}>
       <button
         type="button"
-        className={`navbar-user-trigger ${open ? 'open' : ''}`}
+        className={`navbar-user-avatar-btn ${open ? 'open' : ''}`}
         onClick={() => setOpen((v) => !v)}
         aria-expanded={open}
         aria-haspopup="menu"
+        aria-label="Account menu"
+        title={user.name || 'Account'}
       >
         <span className="navbar-user-avatar">{initials}</span>
-        <span className="navbar-user-name">{user.name?.split(' ')[0] || 'Account'}</span>
-        <svg className="navbar-user-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-          <polyline points="6 9 12 15 18 9" />
-        </svg>
       </button>
 
       {open && (
@@ -66,17 +64,8 @@ const NavbarUserMenu = () => {
             </div>
           </div>
           <div className="navbar-user-menu-divider" />
-          <Link to="/dashboard" className="navbar-user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
-            Dashboard
-          </Link>
-          <Link to="/community" className="navbar-user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
-            Community feed
-          </Link>
-          <Link to="/opportunities" className="navbar-user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
-            Opportunities
-          </Link>
           <Link to={profilePath} className="navbar-user-menu-item" role="menuitem" onClick={() => setOpen(false)}>
-            Creator profile
+            Profile
           </Link>
           <Link
             to="/dashboard?tab=profile"
@@ -88,7 +77,7 @@ const NavbarUserMenu = () => {
           </Link>
           <div className="navbar-user-menu-divider" />
           <button type="button" className="navbar-user-menu-item navbar-user-menu-item--danger" onClick={handleLogout}>
-            Sign out
+            Logout
           </button>
         </div>
       )}

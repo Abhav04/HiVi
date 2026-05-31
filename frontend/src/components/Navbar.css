@@ -26,6 +26,14 @@
   gap: 48px;
 }
 
+.navbar--app .navbar-inner {
+  gap: 16px;
+}
+
+.navbar-spacer {
+  flex: 1;
+}
+
 /* Logo */
 .navbar-logo {
   display: flex;

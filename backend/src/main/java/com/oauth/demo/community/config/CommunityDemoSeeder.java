@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -52,6 +53,7 @@ public class CommunityDemoSeeder {
         this.passwordEncoder = passwordEncoder;
     }
 
+    @Transactional
     public void runSeed() {
         if (postRepository.count() > 0 && !forceReseed) {
             log.info("Community demo data already present — skipping seed");

@@ -50,6 +50,7 @@ public class CommunityPostService {
         this.mediaStorage = mediaStorage;
     }
 
+    @Transactional(readOnly = true)
     @Cacheable(value = "community-feed", key = "#mode + '-' + #page + '-' + #size + '-' + (#viewer != null ? #viewer.id : 'anon')")
     public CommunityFeedResponse getFeed(String mode, int page, int size, User viewer) {
         Page<CommunityPost> result;
@@ -93,6 +94,7 @@ public class CommunityPostService {
         );
     }
 
+    @Transactional(readOnly = true)
     public CommunityPostDto getPost(Long postId, User viewer) {
         CommunityPost post = postRepository.findById(postId)
                 .orElseThrow(() -> new IllegalArgumentException("Post not found"));
@@ -102,11 +104,13 @@ public class CommunityPostService {
         return mapper.toPostDto(post, viewer);
     }
 
+    @Transactional(readOnly = true)
     public CommunityFeedResponse getMyPosts(User author, String statusFilter, int page, int size) {
         Page<CommunityPost> result = resolveAuthorPostsPage(author.getId(), statusFilter, page, size);
         return toFeedPage(result, author, page, size);
     }
 
+    @Transactional(readOnly = true)
     public CommunityFeedResponse getBookmarks(User viewer, int page, int size) {
         Page<CommunityPost> result = bookmarkRepository.findBookmarkedPosts(
                 viewer.getId(), PageRequest.of(page, Math.min(size, 30)));

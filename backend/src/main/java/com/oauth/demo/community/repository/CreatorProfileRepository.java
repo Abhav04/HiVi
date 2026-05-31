@@ -1,6 +1,7 @@
 package com.oauth.demo.community.repository;
 
 import com.oauth.demo.community.entity.CreatorProfile;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
@@ -12,5 +13,6 @@ public interface CreatorProfileRepository extends JpaRepository<CreatorProfile, 
 
     Optional<CreatorProfile> findByUserUsername(String username);
 
+    @EntityGraph(attributePaths = {"user"})
     List<CreatorProfile> findTop12ByOrderByTotalLikesDescTotalPostsDesc();
 }

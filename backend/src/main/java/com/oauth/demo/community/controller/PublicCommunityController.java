@@ -10,6 +10,8 @@ import com.oauth.demo.community.service.CommunityInteractionService;
 import com.oauth.demo.community.service.CommunityPostService;
 import com.oauth.demo.community.service.CommunityUserService;
 import com.oauth.demo.community.service.CreatorProfileService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -24,6 +26,8 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/public/community")
 public class PublicCommunityController {
+
+    private static final Logger log = LoggerFactory.getLogger(PublicCommunityController.class);
 
     private final CommunityPostService postService;
     private final CommunityInteractionService interactionService;
@@ -87,8 +91,13 @@ public class PublicCommunityController {
     }
 
     private void ensureDemoContent() {
-        if (postRepository.count() == 0) {
-            demoSeeder.runSeed();
+        try {
+            if (postRepository.count() == 0) {
+                demoSeeder.runSeed();
+                log.info("Community demo seed completed — {} posts", postRepository.count());
+            }
+        } catch (Exception ex) {
+            log.error("Community demo seed failed (feed may still work if posts exist)", ex);
         }
     }
 }

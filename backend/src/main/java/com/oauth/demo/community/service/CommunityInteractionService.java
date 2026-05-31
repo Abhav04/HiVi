@@ -112,6 +112,7 @@ public class CommunityInteractionService {
         return mapper.toCommentDto(saved, user, List.of());
     }
 
+    @Transactional(readOnly = true)
     public List<CommentDto> getComments(Long postId, User viewer) {
         List<PostComment> roots = commentRepository.findByPostIdAndParentIsNullOrderByCreatedAtDesc(postId);
         List<CommentDto> result = new ArrayList<>();

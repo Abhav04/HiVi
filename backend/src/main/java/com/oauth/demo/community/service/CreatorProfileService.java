@@ -42,6 +42,7 @@ public class CreatorProfileService {
                 });
     }
 
+    @Transactional(readOnly = true)
     public CreatorProfileDto getProfile(String username, User viewer) {
         User user = userRepository.findByUsername(username);
         if (user == null) {
@@ -58,6 +59,7 @@ public class CreatorProfileService {
         return mapper.toProfileDto(profile, user, viewer, recent);
     }
 
+    @Transactional(readOnly = true)
     public List<com.oauth.demo.community.dto.AuthorSummaryDto> getTrendingCreators(User viewer) {
         return profileRepository.findTop12ByOrderByTotalLikesDescTotalPostsDesc().stream()
                 .map(p -> mapper.toAuthorSummary(p.getUser(), viewer))

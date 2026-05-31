@@ -48,8 +48,12 @@ public class RedditTrendingService {
         String message = null;
 
         if (cached.isEmpty()) {
-            message = "Trending posts are temporarily unavailable. Please try again shortly.";
-            return buildResponse(List.of(), null, List.of(), subredditFilter, page, limit, stale, message, 0);
+            List<RedditPostDto> fallback = RedditFallbackPosts.curated();
+            cacheService.put(fallback);
+            cached = fallback;
+            stale = true;
+            message = "Showing curated editor highlights while live Reddit sync catches up.";
+            log.warn("Reddit cache empty after refresh — serving {} fallback posts", fallback.size());
         }
 
         List<RedditPostDto> ranked = RedditPostRanker.sortByTrending(cached);
@@ -99,7 +103,11 @@ public class RedditTrendingService {
             log.info("Reddit cache updated with {} posts (ranked)", ranked.size());
         } catch (RedditFetchException ex) {
             log.error("Reddit refresh failed: {}", ex.getMessage());
-            if (!cacheService.isEmpty()) {
+            if (cacheService.isEmpty()) {
+                List<RedditPostDto> fallback = RedditFallbackPosts.curated();
+                cacheService.put(fallback);
+                log.warn("Loaded {} Reddit fallback posts after API failure", fallback.size());
+            } else {
                 log.warn("Serving stale Reddit cache after refresh failure");
             }
         } catch (Exception ex) {

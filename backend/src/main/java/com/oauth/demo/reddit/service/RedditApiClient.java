@@ -93,7 +93,15 @@ public class RedditApiClient {
                 throw new RedditFetchException("Unexpected Reddit response for r/" + subreddit, false);
             }
 
-            return parseListing(response.getBody(), subreddit);
+            String body = response.getBody().trim();
+            if (body.startsWith("<") || !body.startsWith("{")) {
+                throw new RedditFetchException(
+                        "Reddit returned HTML instead of JSON for r/" + subreddit + " (blocked or rate limited)",
+                        false
+                );
+            }
+
+            return parseListing(body, subreddit);
         } catch (HttpStatusCodeException ex) {
             boolean rateLimited = ex.getStatusCode() == HttpStatus.TOO_MANY_REQUESTS;
             log.error("Reddit HTTP {} for r/{}: {}", ex.getStatusCode(), subreddit, ex.getMessage());

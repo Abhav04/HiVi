@@ -182,18 +182,17 @@ const DashboardLayout = ({ children, activeTab, onTabChange }) => {
                   <TabIcon type={tab.icon} />
                 </span>
                 {tab.label}
-                {tab.id === 'messages' && <span className="dash-badge">3</span>}
               </button>
             ))}
           </nav>
 
           <div className="dash-sidebar-footer">
-            <Link to="/feed" className="dash-browse-btn">
+            <Link to="/community" className="dash-browse-btn">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <circle cx="11" cy="11" r="8" />
                 <path d="m21 21-4.35-4.35" />
               </svg>
-              browse editors
+              explore community
             </Link>
             <button type="button" className="dash-logout" onClick={handleSignOut}>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">

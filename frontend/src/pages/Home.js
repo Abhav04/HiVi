@@ -84,8 +84,8 @@ const Home = () => {
                 <path d="M5 12h14M12 5l7 7-7 7"/>
               </svg>
             </Link>
-            <Link to="/feed" className="cta-secondary">
-              browse editors
+            <Link to="/community" className="cta-secondary">
+              explore community
             </Link>
           </div>
 

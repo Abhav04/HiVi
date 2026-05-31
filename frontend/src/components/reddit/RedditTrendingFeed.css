@@ -21,16 +21,27 @@
 }
 
 .reddit-trending-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 10px;
-  letter-spacing: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
-  color: #ff9a4d;
+  color: var(--gold);
   margin-bottom: 10px;
 }
 
 .reddit-trending--page .reddit-trending-eyebrow {
   color: #ffb86c;
+}
+
+.reddit-feed-notice {
+  font-size: 14px;
+  color: var(--muted2);
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  line-height: 1.5;
 }
 
 .reddit-trending-title {
@@ -51,10 +62,10 @@
 }
 
 .reddit-trending-sub {
-  font-size: 14px;
+  font-size: 16px;
   color: var(--muted2);
   max-width: 560px;
-  line-height: 1.65;
+  line-height: 1.6;
 }
 
 .reddit-trending--page .reddit-trending-sub {

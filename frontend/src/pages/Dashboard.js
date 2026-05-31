@@ -52,7 +52,7 @@ const Dashboard = () => {
                 ) : null}
               </h1>
             </div>
-            <Link to="/feed" className="cta-new-project">
+            <Link to="/community" className="cta-new-project">
               + new project
             </Link>
           </div>
@@ -87,7 +87,7 @@ const Dashboard = () => {
                 </div>
                 <p className="projects-empty-title">no projects yet</p>
                 <p className="projects-empty-sub">post your first project to connect with top editors</p>
-                <Link to="/feed" className="projects-empty-cta">
+                <Link to="/community" className="projects-empty-cta">
                   browse editors →
                 </Link>
               </div>
@@ -134,7 +134,7 @@ const Dashboard = () => {
             </h2>
             <div className="quick-actions">
               {[
-                { icon: '🎬', label: 'post a project', sub: 'find your next editor', action: () => navigate('/feed') },
+                { icon: '🎬', label: 'community feed', sub: 'see creator work & post', action: () => navigate('/community') },
                 {
                   icon: '🔥',
                   label: 'trends from reddit',
@@ -150,7 +150,7 @@ const Dashboard = () => {
                 {
                   icon: '💬',
                   label: 'check messages',
-                  sub: isNewUser ? 'no messages yet' : '3 unread messages',
+                  sub: isNewUser ? 'no messages yet' : 'view your inbox',
                   action: () => setActiveTab('messages'),
                 },
               ].map((a, i) => (
@@ -179,7 +179,7 @@ const Dashboard = () => {
             </svg>
           </div>
           <h3 className="cs-title">{activeTab}</h3>
-          <p className="cs-sub">this section is on its way</p>
+          <p className="cs-sub">This section is coming soon. Use Community, Opportunities, or Reddit trends in the meantime.</p>
         </div>
       )}
     </DashboardLayout>

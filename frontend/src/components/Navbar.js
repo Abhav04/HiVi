@@ -6,7 +6,6 @@ import { getInitials } from '../utils/auth';
 import './Navbar.css';
 
 const GUEST_LINKS = [
-  { to: '/feed', label: 'discover', hash: false },
   { href: '#how', label: 'how it works', hash: true },
   { href: '#talent', label: 'for talent', hash: true },
   { href: '#hire', label: 'hire', hash: true },
@@ -15,8 +14,8 @@ const GUEST_LINKS = [
 const AUTH_LINKS = [
   { to: '/community', label: 'community' },
   { to: '/opportunities', label: 'opportunities' },
+  { to: '/reddit-trends', label: 'trends' },
   { to: '/dashboard', label: 'dashboard' },
-  { to: '/feed', label: 'discover' },
 ];
 
 const Navbar = ({ transparent = false }) => {

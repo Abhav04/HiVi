@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:wght@300;400;500&family=Space+Mono:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
 
 :root {
   --black: #080808;
@@ -11,14 +11,14 @@
   --gold2: #e8c96d;
   --gold-dim: rgba(201, 168, 76, 0.12);
   --white: #f5f2eb;
-  --muted: #6b6b6b;
-  --muted2: #999;
-  --text: #d4cfc4;
+  --muted: #9ca3af;
+  --muted2: #b8bcc4;
+  --text: #e8e6e1;
   --red: #c0392b;
   --green: #27ae60;
-  --font-display: 'Playfair Display', Georgia, serif;
-  --font-body: 'DM Sans', sans-serif;
-  --font-mono: 'Space Mono', monospace;
+  --font-display: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, monospace;
   --radius: 2px;
   --radius2: 6px;
   --transition: 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
@@ -40,7 +40,8 @@ body {
   background: var(--black);
   color: var(--text);
   font-family: var(--font-body);
-  font-weight: 300;
+  font-weight: 400;
+  font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;

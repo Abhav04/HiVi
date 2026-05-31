@@ -44,6 +44,7 @@ const RedditTrendingFeed = ({ variant = 'default' }) => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [cachedAt, setCachedAt] = useState(null);
+  const [feedNotice, setFeedNotice] = useState(null);
   const loaderRef = useRef(null);
   const scrollRef = useRef(null);
   const pageSize = isPage ? 15 : 12;
@@ -71,6 +72,7 @@ const RedditTrendingFeed = ({ variant = 'default' }) => {
         }
         setHasMore(data.hasMore);
         setCachedAt(data.cachedAt);
+        setFeedNotice(data.message || null);
         if (data.subreddits?.length) {
           setSubreddits(['all', ...data.subreddits.map((s) => s.replace(/^r\//i, ''))]);
         }
@@ -137,15 +139,7 @@ const RedditTrendingFeed = ({ variant = 'default' }) => {
             {isPage ? 'curated creator feed' : 'creator ecosystem'}
           </p>
           <h2 className="reddit-trending-title">
-            {isPage ? (
-              <>
-                trends from <em>reddit</em>
-              </>
-            ) : (
-              <>
-                trending from <em>reddit</em>
-              </>
-            )}
+            {isPage ? 'Trends from Reddit' : 'Trending from Reddit'}
           </h2>
           <p className="reddit-trending-sub">
             {isPage
@@ -160,6 +154,10 @@ const RedditTrendingFeed = ({ variant = 'default' }) => {
           </span>
         )}
       </div>
+
+      {feedNotice && !loading && (
+        <p className="reddit-feed-notice" role="status">{feedNotice}</p>
+      )}
 
       <div className="reddit-tabs" role="tablist">
         {subreddits.map((sub) => (

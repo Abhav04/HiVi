@@ -91,12 +91,9 @@ const CommunityFeed = () => {
       <header className="community-feed-header">
         <div>
           <p className="community-feed-eyebrow">Creator network</p>
-          <h1 className="community-feed-title">
-            Community <em>Feed</em>
-          </h1>
+          <h1 className="community-feed-title">Community Feed</h1>
           <p className="community-feed-sub">
-            A professional home for editors—portfolio drops, reels, breakdowns, and freelance
-            availability. Built for discovery, not noise.
+            Portfolio drops, reels, breakdowns, and freelance availability from video editors.
           </p>
         </div>
         <div className="community-feed-header-actions">

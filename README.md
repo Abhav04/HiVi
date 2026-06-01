@@ -9,6 +9,8 @@ The project focuses on scalable backend architecture, secure authentication, and
 ## 🌐 Live Demo
 
 🔗 [Visit Hivi](https://hi-vi.vercel.app)
+
+Walkthrough: https://drive.google.com/file/d/1Uzf2oZFVW06z7p2VjkgGCiMFGQTWM9h3/view?usp=sharing
 # ✨ Features
 
 ## 🔐 Authentication & Security

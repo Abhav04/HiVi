@@ -470,6 +470,7 @@ sequenceDiagram
 
 | Method | Path | Auth | Purpose |
 |--------|------|------|---------|
+| GET | `/auth/signup-diagnostics` | No | Read-only signup/DB probe (schema + test insert/delete) |
 | POST | `/auth/signup` | No | Register local user (username + email + password); enabled immediately in prod; optional email verification when Redis is configured |
 | POST | `/auth/signin` | No | Email or username + password → JWT |
 | POST | `/auth/verify` | No | Email verification code (local dev with Redis only) |
@@ -615,7 +616,7 @@ Subreddits configured via `reddit.subreddits`. Fallback curated posts when Reddi
 |-----------|----------|
 | Missing/invalid JWT on protected route | 401 JSON via `AuthEntryPointJwt` |
 | Invalid signup input / duplicate user | 400 JSON via `AuthExceptionHandler` with explicit message |
-| Unexpected signup/signin backend exception | 500 JSON via `AuthExceptionHandler` (`Signup failed due to a server error...`) |
+| Unexpected signup/signin backend exception | 500 JSON via `AuthExceptionHandler` with `detail` root-cause message |
 | Reddit upstream failure | Stale cache served or 502 |
 
 ---

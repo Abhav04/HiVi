@@ -1,5 +1,6 @@
 package com.oauth.demo.controller;
 
+import com.oauth.demo.service.AuthErrorSupport;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -9,9 +10,11 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 @RestControllerAdvice(assignableTypes = AuthController.class)
@@ -27,9 +30,15 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDuplicate(DataIntegrityViolationException ex) {
-        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
-                "message", "An account with this email or username already exists"
-        ));
+        return conflict(ex);
+    }
+
+    @ExceptionHandler(TransactionSystemException.class)
+    public ResponseEntity<Map<String, Object>> handleTransaction(TransactionSystemException ex) {
+        if (AuthErrorSupport.isDataIntegrity(ex)) {
+            return conflict(ex);
+        }
+        return serverError(ex, "/auth/signup");
     }
 
     @ExceptionHandler({
@@ -55,11 +64,28 @@ public class AuthExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleUnexpected(Exception ex) {
-        log.error("Unexpected auth error", ex);
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of(
-                "error", "Internal Server Error",
-                "message", "Signup failed due to a server error. Please retry in a moment.",
-                "path", "/auth/signup"
+        if (AuthErrorSupport.isDataIntegrity(ex)) {
+            return conflict(ex);
+        }
+        return serverError(ex, "/auth/signup");
+    }
+
+    private static ResponseEntity<Map<String, Object>> conflict(Throwable ex) {
+        log.warn("Signup conflict: {}", AuthErrorSupport.rootMessage(ex));
+        return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
+                "message", "An account with this email or username already exists"
         ));
+    }
+
+    private static ResponseEntity<Map<String, Object>> serverError(Throwable ex, String path) {
+        String root = AuthErrorSupport.rootMessage(ex);
+        log.error("Auth error on {}: {} ({})", path, root, ex.getClass().getName(), ex);
+
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("error", "Internal Server Error");
+        body.put("message", AuthErrorSupport.userFacingSignupMessage(ex));
+        body.put("detail", root);
+        body.put("path", path);
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(body);
     }
 }

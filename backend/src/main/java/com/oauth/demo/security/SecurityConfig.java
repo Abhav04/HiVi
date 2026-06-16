@@ -80,6 +80,7 @@ public class SecurityConfig {
                         .requestMatchers("/user/signup").permitAll()
                         .requestMatchers("/auth/signin").permitAll()
                         .requestMatchers("/auth/signup").permitAll()
+                        .requestMatchers("/auth/signup-diagnostics").permitAll()
                         .requestMatchers("/user/test-user").permitAll()
                         .requestMatchers("/login", "/login/**").permitAll()
                         .requestMatchers("/login/oauth2/**").permitAll()

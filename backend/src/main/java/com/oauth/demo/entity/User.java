@@ -18,6 +18,7 @@ public class User {
 
     private String displayName;
 
+    @Column(length = 255)
     private String password;
 
     private String provider; // LOCAL or GOOGLE

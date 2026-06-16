@@ -37,7 +37,11 @@ export async function signUpWithCredentials({ name, email, password, role }) {
   const body = await res.json().catch(() => ({}));
 
   if (!res.ok) {
-    const message = body?.message || body?.error || 'Could not create your account.';
+    const message =
+      body?.message
+      || body?.detail
+      || body?.error
+      || 'Could not create your account.';
     throw new Error(message);
   }
 

@@ -6,6 +6,7 @@ import com.oauth.demo.entity.User;
 import com.oauth.demo.jwt.JwtUtils;
 import com.oauth.demo.payload.request.SignupRequest;
 import com.oauth.demo.repository.UserRepository;
+import com.oauth.demo.service.SignupDiagnosticsService;
 import com.oauth.demo.service.UserService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,15 @@ public class AuthController {
 
     @Autowired(required = false)
     private RedisTemplate<String, String> redisTemplate;
+
+    @Autowired
+    private SignupDiagnosticsService signupDiagnosticsService;
+
+    /** Safe read-only probe for signup/DB issues (no account is created). */
+    @GetMapping("/signup-diagnostics")
+    public ResponseEntity<Map<String, Object>> signupDiagnostics() {
+        return ResponseEntity.ok(signupDiagnosticsService.run());
+    }
 
     // ✅ SIGNUP
     @PostMapping("/signup")

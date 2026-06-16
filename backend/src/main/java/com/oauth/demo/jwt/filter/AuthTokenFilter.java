@@ -78,7 +78,8 @@ public class AuthTokenFilter extends OncePerRequestFilter {//this class is used 
         if ("OPTIONS".equalsIgnoreCase(method)) {
             return true;
         }
-        if (path.startsWith("/auth")
+        if (path.startsWith("/auth/signup-diagnostics")
+                || path.startsWith("/auth")
                 || path.startsWith("/user/signup")
                 || path.startsWith("/user/signin")
                 || path.startsWith("/oauth2")

@@ -92,7 +92,7 @@ The frontend (`https://hi-vi.vercel.app`) talks to the API cross-origin. Two log
 #### Path A — email/password
 
 ```text
-POST /auth/signup   → creates users row (provider=LOCAL, role=client); auto-enabled in prod (no Redis); email verification only when Redis is available (local)
+POST /auth/signup   → creates users row (provider=LOCAL, role=client); auto-enabled by default (`auth.signup.require-verification=false`); optional email verification when explicitly enabled and Redis is healthy
 POST /auth/signin   → validates password by username or email → returns JWT in JSON body
 ```
 

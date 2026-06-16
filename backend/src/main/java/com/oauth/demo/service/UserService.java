@@ -6,6 +6,7 @@ import com.oauth.demo.repository.UserRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -26,6 +27,9 @@ public class UserService {
 
     @Autowired(required = false)
     private RedisTemplate<String, String> redisTemplate;
+
+    @Value("${auth.signup.require-verification:false}")
+    private boolean requireEmailVerification;
 
     @Transactional
     public User save(SignupRequest signupRequest) {
@@ -60,7 +64,7 @@ public class UserService {
         String role = signupRequest.getRole();
         user.setRole(role != null && !role.isBlank() ? role.toLowerCase() : "client");
 
-        boolean verificationEnabled = redisTemplate != null;
+        boolean verificationEnabled = requireEmailVerification && redisTemplate != null;
         user.setEnabled(!verificationEnabled);
 
         user = userRepository.save(user);
@@ -68,13 +72,21 @@ public class UserService {
 
         if (verificationEnabled) {
             String token = String.valueOf((int) (Math.random() * 900000) + 100000);
-            redisTemplate.opsForValue().set(
-                    "verify:" + user.getEmail(),
-                    token,
-                    java.time.Duration.ofMinutes(5)
-            );
-            if (emailService != null) {
-                emailService.sendVerificationEmail(user.getEmail(), token);
+            try {
+                redisTemplate.opsForValue().set(
+                        "verify:" + user.getEmail(),
+                        token,
+                        java.time.Duration.ofMinutes(5)
+                );
+                if (emailService != null) {
+                    emailService.sendVerificationEmail(user.getEmail(), token);
+                }
+            } catch (Exception ex) {
+                // Never block signup if Redis/email infra is unavailable in production.
+                log.warn("Verification setup failed for {} — auto-enabling account: {}",
+                        user.getEmail(), ex.getMessage());
+                user.setEnabled(true);
+                user = userRepository.save(user);
             }
         }
 

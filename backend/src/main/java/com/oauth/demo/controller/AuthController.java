@@ -7,6 +7,8 @@ import com.oauth.demo.jwt.JwtUtils;
 import com.oauth.demo.payload.request.SignupRequest;
 import com.oauth.demo.repository.UserRepository;
 import com.oauth.demo.service.UserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -22,6 +24,7 @@ import java.util.*;
 @RestController
 @RequestMapping("/auth")
 public class AuthController {
+    private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
     @Autowired
     private UserService userService;
@@ -41,8 +44,11 @@ public class AuthController {
     // ✅ SIGNUP
     @PostMapping("/signup")
     public ResponseEntity<?> registerUser(@RequestBody SignupRequest signUpRequest) {
+        log.info("Signup attempt email={} username={}",
+                signUpRequest.getEmail(), signUpRequest.getUsername());
 
-        userService.save(signUpRequest);
+        User created = userService.save(signUpRequest);
+        log.info("Signup success userId={} username={}", created.getId(), created.getUsername());
 
         return ResponseEntity.ok(Map.of("message", "User registered successfully"));
     }

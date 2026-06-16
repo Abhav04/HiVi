@@ -614,6 +614,8 @@ Subreddits configured via `reddit.subreddits`. Fallback curated posts when Reddi
 | Situation | Response |
 |-----------|----------|
 | Missing/invalid JWT on protected route | 401 JSON via `AuthEntryPointJwt` |
+| Invalid signup input / duplicate user | 400 JSON via `AuthExceptionHandler` with explicit message |
+| Unexpected signup/signin backend exception | 500 JSON via `AuthExceptionHandler` (`Signup failed due to a server error...`) |
 | Reddit upstream failure | Stale cache served or 502 |
 
 ---

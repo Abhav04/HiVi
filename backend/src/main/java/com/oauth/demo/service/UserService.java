@@ -8,8 +8,6 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-
 @Service
 public class UserService {
 
@@ -18,36 +16,72 @@ public class UserService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
-    @Autowired
+
+    @Autowired(required = false)
     private EmailService emailService;
+
     @Autowired(required = false)
     private RedisTemplate<String, String> redisTemplate;
 
     public User save(SignupRequest signupRequest) {
+        String email = normalize(signupRequest.getEmail());
+        String username = normalize(signupRequest.getUsername());
+        String password = signupRequest.getPassword();
+
+        if (email == null || email.isBlank()) {
+            throw new IllegalArgumentException("Email is required");
+        }
+        if (username == null || username.isBlank()) {
+            throw new IllegalArgumentException("Username is required");
+        }
+        if (password == null || password.length() < 8) {
+            throw new IllegalArgumentException("Password must be at least 8 characters");
+        }
+
+        if (userRepository.findByEmail(email) != null) {
+            throw new IllegalArgumentException("An account with this email already exists");
+        }
+        if (userRepository.findByUsername(username) != null) {
+            throw new IllegalArgumentException("This username is already taken");
+        }
 
         User user = new User();
-
-        user.setUsername(signupRequest.getUsername());
-        user.setEmail(signupRequest.getEmail());
-        user.setPassword(passwordEncoder.encode(signupRequest.getPassword()));
+        user.setUsername(username);
+        user.setEmail(email);
+        user.setDisplayName(trimToNull(signupRequest.getDisplayName()));
+        user.setPassword(passwordEncoder.encode(password));
         user.setProvider("LOCAL");
-        String token = String.valueOf((int)(Math.random() * 900000) + 100000);
 
-        user.setEnabled(false);
+        String role = signupRequest.getRole();
+        user.setRole(role != null && !role.isBlank() ? role.toLowerCase() : "client");
 
-        userRepository.save(user);
-        if (redisTemplate != null) {
+        boolean verificationEnabled = redisTemplate != null;
+        user.setEnabled(!verificationEnabled);
+
+        user = userRepository.save(user);
+
+        if (verificationEnabled) {
+            String token = String.valueOf((int) (Math.random() * 900000) + 100000);
             redisTemplate.opsForValue().set(
                     "verify:" + user.getEmail(),
                     token,
                     java.time.Duration.ofMinutes(5)
             );
+            if (emailService != null) {
+                emailService.sendVerificationEmail(user.getEmail(), token);
+            }
         }
 
-        // ✅ send email
-        emailService.sendVerificationEmail(user.getEmail(), token);
+        return user;
+    }
 
+    private static String normalize(String value) {
+        return value == null ? null : value.trim();
+    }
 
-        return userRepository.save(user);
+    private static String trimToNull(String value) {
+        if (value == null) return null;
+        String trimmed = value.trim();
+        return trimmed.isEmpty() ? null : trimmed;
     }
 }

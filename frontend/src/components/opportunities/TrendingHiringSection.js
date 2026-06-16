@@ -38,9 +38,9 @@ const TrendingHiringSection = ({ trending = [], latest = [], loading = false }) 
             <p>Most engaged editor roles right now</p>
           </div>
           <div className="opp-trending-scroll">
-            {trending.slice(0, 4).map((o) => (
+            {trending.slice(0, 4).map((o, index) => (
               <div key={o.id || o.applyUrl} className="opp-trending-card-wrap">
-                <OpportunityCard opportunity={o} />
+                <OpportunityCard opportunity={o} logoPriority={index < 4} />
               </div>
             ))}
           </div>
@@ -54,7 +54,7 @@ const TrendingHiringSection = ({ trending = [], latest = [], loading = false }) 
             <p>Fresh posts from Reddit & partners</p>
           </div>
           <ul className="opp-latest-list">
-            {latest.slice(0, 6).map((o) => (
+            {latest.slice(0, 6).map((o, index) => (
               <li key={o.id || o.applyUrl}>
                 <a href={o.applyUrl} target="_blank" rel="noopener noreferrer" className="opp-latest-item">
                   <CompanyLogo
@@ -64,6 +64,7 @@ const TrendingHiringSection = ({ trending = [], latest = [], loading = false }) 
                     initials={o.companyInitials}
                     company={o.company}
                     source={o.source}
+                    priority={index < 3}
                   />
                   <span className="opp-latest-text">
                     <span className="opp-latest-title">{o.title}</span>

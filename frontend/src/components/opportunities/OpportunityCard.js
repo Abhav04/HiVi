@@ -19,7 +19,7 @@ const formatWorkMode = (workMode) => {
   return workMode.replace('_', ' ').toLowerCase();
 };
 
-const OpportunityCard = ({ opportunity }) => {
+const OpportunityCard = ({ opportunity, logoPriority = false }) => {
   const {
     title,
     company,
@@ -49,6 +49,7 @@ const OpportunityCard = ({ opportunity }) => {
           initials={companyInitials}
           company={company}
           source={source}
+          priority={logoPriority}
         />
         <div className="opp-card-header-text">
           <div className="opp-card-title-row">

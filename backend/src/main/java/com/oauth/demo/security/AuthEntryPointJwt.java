@@ -51,6 +51,9 @@ public class AuthEntryPointJwt implements AuthenticationEntryPoint {
             return "Please sign in to continue.";
         }
         if (raw.contains("Full authentication is required") || raw.contains("Unauthorized")) {
+            if (path != null && path.startsWith("/auth")) {
+                return "Please sign in to continue.";
+            }
             if (path != null && path.startsWith("/api/community")) {
                 return "Sign in to interact with the community feed.";
             }

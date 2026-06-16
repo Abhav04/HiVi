@@ -18,6 +18,8 @@ export const CATEGORIES = [
   { id: 'REMOTE_WORK', label: 'Remote work' },
 ];
 
+const FAVICON_ORIGIN = 'https://www.google.com';
+
 const SOURCES = [
   { id: 'ALL', label: 'All sources' },
   { id: 'REDDIT', label: 'Reddit' },
@@ -42,6 +44,17 @@ const OpportunityFeed = () => {
     payLabel: '',
     category: 'FREELANCE',
   });
+
+  useEffect(() => {
+    const link = document.createElement('link');
+    link.rel = 'preconnect';
+    link.href = FAVICON_ORIGIN;
+    link.crossOrigin = 'anonymous';
+    document.head.appendChild(link);
+    return () => {
+      document.head.removeChild(link);
+    };
+  }, []);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -177,8 +190,12 @@ const OpportunityFeed = () => {
       {error && <p className="opp-feed-error">{error}</p>}
 
       <div className="opp-feed-grid">
-        {opportunities.map((o) => (
-          <OpportunityCard key={`${o.source}-${o.id || o.applyUrl}`} opportunity={o} />
+        {opportunities.map((o, index) => (
+          <OpportunityCard
+            key={`${o.source}-${o.id || o.applyUrl}`}
+            opportunity={o}
+            logoPriority={index < 8}
+          />
         ))}
       </div>
 

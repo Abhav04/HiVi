@@ -1,0 +1,15 @@
+---
+description: HiVi React frontend conventions
+globs: frontend/**/*
+alwaysApply: false
+---
+
+# HiVi frontend
+
+- API base URL: `utils/auth.js` → `getApiUrl()` / `REACT_APP_API_URL`
+- User session: `localStorage` (`hivi_user`, `token`)
+- Design tokens: `App.css` `:root` — match dark/gold/purple patterns
+- `PostCard` = mock editor profiles; `reddit/RedditPostCard` = Reddit posts
+- Backend API contracts: see `docs/Backend_Flow.md` § API reference
+
+After new API integrations, update `docs/Backend_Flow.md` if endpoints or auth rules change.

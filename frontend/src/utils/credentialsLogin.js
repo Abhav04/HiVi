@@ -8,7 +8,7 @@ export function resolveLoginUsername(emailOrUsername) {
     return value.split('@')[0];
   }
   if (value.includes('@')) {
-    return value;
+    return deriveUsername(value) || value.split('@')[0];
   }
   return value;
 }

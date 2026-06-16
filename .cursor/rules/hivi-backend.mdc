@@ -1,0 +1,17 @@
+---
+description: HiVi Spring Boot backend conventions
+globs: backend/**/*
+alwaysApply: false
+---
+
+# HiVi backend
+
+Read `docs/Backend_Flow.md` before editing.
+
+- Package layout: `controller` → `service` → `repository` → `entity`
+- New features: prefer dedicated package (e.g. `reddit/`, `community/`) over dumping into root
+- Security: update `SecurityConfig.java` and `AuthTokenFilter` skip paths together
+- Secrets: env vars only, never commit credentials
+- Prod profile: `application-prod.properties` — no Redis unless explicitly enabling
+
+After controller/security/schema changes, update `docs/Backend_Flow.md`.

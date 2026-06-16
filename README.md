@@ -3,7 +3,7 @@
 Hivi is a full-stack microservices-based platform built using **Spring Boot**, **Spring Security**, **JWT Authentication**, **OAuth2**, **React**, and **PostgreSQL**.  
 The project focuses on scalable backend architecture, secure authentication, and modern frontend integration.
 
-📚 **Full project documentation:** [docs/README.md](./docs/README.md) — architecture, auth, APIs, deployment, and feature status (use this as permanent context for development).
+📚 **Backend documentation:** [docs/Backend_Flow.md](./docs/Backend_Flow.md) — architecture, auth, APIs, database, and deployment.
 
 ---
 ## 🌐 Live Demo

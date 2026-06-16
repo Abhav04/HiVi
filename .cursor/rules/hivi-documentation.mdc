@@ -1,0 +1,31 @@
+---
+description: Keep HiVi docs in sync when code or architecture changes
+alwaysApply: true
+---
+
+# HiVi documentation maintenance
+
+Before implementing backend features, read `docs/Backend_Flow.md`.
+
+## After every meaningful backend change, update docs in the same task
+
+| If you changed… | Update |
+|-----------------|--------|
+| API routes, request/response | `docs/Backend_Flow.md` § API reference |
+| Auth, OAuth, JWT, CORS, security rules | `docs/Backend_Flow.md` § Security |
+| New/changed entities or tables | `docs/Backend_Flow.md` § Database schema |
+| Backend packages, services, schedulers | `docs/Backend_Flow.md` § Backend layout |
+| Community, opportunities, Reddit behavior | `docs/Backend_Flow.md` § relevant feature section |
+| Render/env vars, prod profile | `docs/Backend_Flow.md` § Configuration / Deployment |
+
+## Do not skip
+
+- New endpoints → add to `Backend_Flow.md` before finishing
+- Security rule changes → update public/protected route lists in `Backend_Flow.md`
+
+## Entry point
+
+- `docs/Backend_Flow.md`
+- Cursor summary: `AGENTS.md`
+
+Do not create additional docs in `docs/`; extend `Backend_Flow.md` only.

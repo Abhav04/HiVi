@@ -86,6 +86,7 @@ public class SecurityConfig {
                         .requestMatchers("/oauth2/**").permitAll()
                         .requestMatchers("/posts/**").permitAll()
                         .requestMatchers("/health", "/actuator/health", "/oauth/status", "/oauth/begin").permitAll()
+                        .requestMatchers("/error").permitAll()
                         .requestMatchers("/api/reddit/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/opportunities/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/community/**").permitAll()

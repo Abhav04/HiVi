@@ -83,6 +83,7 @@ public class AuthTokenFilter extends OncePerRequestFilter {//this class is used 
                 || path.startsWith("/user/signin")
                 || path.startsWith("/oauth2")
                 || path.startsWith("/login")
+                || path.equals("/error")
                 || path.startsWith("/health")
                 || path.startsWith("/oauth/status")
                 || path.startsWith("/oauth/begin")

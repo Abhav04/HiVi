@@ -65,19 +65,32 @@ public class CompanyLogoResolver {
             String title,
             String storedLogoUrl) {
 
-        if (storedLogoUrl != null && !storedLogoUrl.isBlank()) {
-            String domain = extractHost(applyUrl);
-            return build(storedLogoUrl, domain, company, source);
+        String domain = resolveDomain(source, company, applyUrl, title);
+
+        if (storedLogoUrl != null && storedLogoUrl.contains("logo.clearbit.com")) {
+            String fromClearbit = storedLogoUrl
+                    .replaceFirst("^https?://logo\\.clearbit\\.com/", "")
+                    .split("/")[0];
+            if (!fromClearbit.isBlank()) {
+                domain = fromClearbit;
+            }
         }
 
-        String domain = resolveDomain(source, company, applyUrl, title);
         if (domain == null) {
+            if (storedLogoUrl != null && !storedLogoUrl.isBlank()
+                    && !storedLogoUrl.contains("logo.clearbit.com")) {
+                return build(storedLogoUrl, extractHost(applyUrl), company, source);
+            }
             return new LogoResolution(null, null, initials(company, source));
         }
 
-        String clearbit = "https://logo.clearbit.com/" + domain;
+        return fastLogoForDomain(domain, company, source);
+    }
+
+    /** Google favicon CDN is much faster than Clearbit for card thumbnails */
+    private LogoResolution fastLogoForDomain(String domain, String company, OpportunitySource source) {
         String favicon = "https://www.google.com/s2/favicons?domain=" + domain + "&sz=128";
-        return build(clearbit, domain, company, source, favicon);
+        return new LogoResolution(favicon, null, initials(company, source));
     }
 
     public String resolveAndStoreUrl(Opportunity o) {
@@ -152,20 +165,16 @@ public class CompanyLogoResolver {
     }
 
     private LogoResolution build(String logoUrl, String domain, String company, OpportunitySource source) {
-        String favicon = domain != null
-                ? "https://www.google.com/s2/favicons?domain=" + domain + "&sz=128"
-                : null;
-        return build(logoUrl, domain, company, source, favicon);
-    }
-
-    private LogoResolution build(
-            String logoUrl,
-            String domain,
-            String company,
-            OpportunitySource source,
-            String favicon) {
-
-        return new LogoResolution(logoUrl, favicon, initials(company, source));
+        if (domain != null && !domain.isBlank()) {
+            return fastLogoForDomain(domain, company, source);
+        }
+        if (logoUrl != null && logoUrl.contains("logo.clearbit.com")) {
+            String d = logoUrl.replaceFirst("^https?://logo\\.clearbit\\.com/", "").split("/")[0];
+            if (!d.isBlank()) {
+                return fastLogoForDomain(d, company, source);
+            }
+        }
+        return new LogoResolution(logoUrl, null, initials(company, source));
     }
 
     private String initials(String company, OpportunitySource source) {

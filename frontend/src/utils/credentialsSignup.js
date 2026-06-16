@@ -11,7 +11,13 @@ export async function signUpWithCredentials({ name, email, password, role }) {
   const res = await fetch(`${apiUrl}/auth/signup`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ username, email, password }),
+    body: JSON.stringify({
+      username,
+      email,
+      password,
+      displayName: name?.trim() || undefined,
+      role: role || 'client',
+    }),
     cache: 'no-store',
   });
 
@@ -22,7 +28,7 @@ export async function signUpWithCredentials({ name, email, password, role }) {
     throw new Error(message);
   }
 
-  const session = await signInWithCredentials(email, password);
+  const session = await signInWithCredentials(username, password);
 
   return {
     ...session,

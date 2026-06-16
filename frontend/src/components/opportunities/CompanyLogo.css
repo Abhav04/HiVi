@@ -1,13 +1,13 @@
 .opp-logo {
+  position: relative;
   flex-shrink: 0;
   border-radius: 12px;
   overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 .opp-logo--md {
@@ -21,25 +21,31 @@
   border-radius: 8px;
 }
 
-.opp-logo-img {
-  width: 100%;
-  height: 100%;
-  object-fit: contain;
-  object-position: center;
-  background: #fff;
-  padding: 4px;
-}
-
 .opp-logo-initials {
-  font-family: var(--font-display);
   font-size: 15px;
   font-weight: 700;
   letter-spacing: 0.02em;
   color: var(--white);
+  user-select: none;
 }
 
 .opp-logo--sm .opp-logo-initials {
   font-size: 11px;
+}
+
+.opp-logo-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.15s ease;
+  background: #fff;
+}
+
+.opp-logo-img--loaded {
+  opacity: 1;
 }
 
 .opp-logo--reddit {
@@ -58,16 +64,10 @@
 }
 
 .opp-logo--user {
-  background: linear-gradient(145deg, #7c3aed, #fb923c);
-  border-color: rgba(124, 58, 237, 0.4);
+  background: linear-gradient(145deg, #7c3aed, #c9a84c);
+  border-color: rgba(201, 168, 76, 0.35);
 }
 
 .opp-logo--default {
-  background: linear-gradient(145deg, #374151, #1f2937);
-}
-
-.opp-logo--reddit .opp-logo-img,
-.opp-logo--linkedin .opp-logo-img,
-.opp-logo--internshala .opp-logo-img {
-  background: #fff;
+  background: linear-gradient(145deg, #4b5563, #1f2937);
 }

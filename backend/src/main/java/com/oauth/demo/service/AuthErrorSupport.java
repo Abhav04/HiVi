@@ -4,11 +4,11 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.sql.SQLException;
 
-final class AuthErrorSupport {
+public final class AuthErrorSupport {
 
     private AuthErrorSupport() {}
 
-    static Throwable rootCause(Throwable throwable) {
+    public static Throwable rootCause(Throwable throwable) {
         Throwable current = throwable;
         while (current.getCause() != null && current.getCause() != current) {
             current = current.getCause();
@@ -16,7 +16,7 @@ final class AuthErrorSupport {
         return current;
     }
 
-    static String rootMessage(Throwable throwable) {
+    public static String rootMessage(Throwable throwable) {
         if (throwable == null) {
             return "Unknown error";
         }
@@ -28,7 +28,7 @@ final class AuthErrorSupport {
         return throwable.getMessage() != null ? throwable.getMessage() : root.getClass().getSimpleName();
     }
 
-    static boolean isDataIntegrity(Throwable throwable) {
+    public static boolean isDataIntegrity(Throwable throwable) {
         Throwable current = throwable;
         while (current != null) {
             if (current instanceof DataIntegrityViolationException) {
@@ -42,7 +42,7 @@ final class AuthErrorSupport {
         return false;
     }
 
-    static String userFacingSignupMessage(Throwable throwable) {
+    public static String userFacingSignupMessage(Throwable throwable) {
         if (isDataIntegrity(throwable)) {
             return "An account with this email or username already exists";
         }

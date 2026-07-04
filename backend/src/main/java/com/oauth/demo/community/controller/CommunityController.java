@@ -102,11 +102,12 @@ public class CommunityController {
             @RequestParam(required = false) MultipartFile media,
             @RequestParam(required = false) MultipartFile thumbnail,
             @RequestParam(required = false) MultipartFile[] mediaFiles,
+            @RequestParam(required = false) String keepMediaIds,
             Authentication auth
     ) throws IOException {
         return postService.updatePost(
                 userService.requireUser(auth), postId, title, content, postType, tags,
-                portfolioLink, externalLink, draft, media, thumbnail, mediaFiles);
+                portfolioLink, externalLink, draft, media, thumbnail, mediaFiles, keepMediaIds);
     }
 
     @DeleteMapping("/posts/{postId}")

@@ -6,6 +6,7 @@ import { getToken } from '../utils/auth';
 import { formatCount } from '../utils/communityFormat';
 import CreatorAvatar from '../components/community/CreatorAvatar';
 import CommunityPostCard from '../components/community/CommunityPostCard';
+import PostComposer from '../components/community/PostComposer';
 import './CreatorProfilePage.css';
 
 const TABS = [
@@ -21,6 +22,7 @@ const CreatorProfilePage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [tab, setTab] = useState('all');
+  const [editingPost, setEditingPost] = useState(null);
 
   useEffect(() => {
     setLoading(true);
@@ -39,6 +41,17 @@ const CreatorProfilePage = () => {
     if (tab === 'image') return posts.filter((p) => p.postType === 'IMAGE');
     return posts;
   }, [profile, tab]);
+
+  const handleDeletePost = (postId) => {
+    setProfile((p) => {
+      if (!p) return null;
+      return {
+        ...p,
+        totalPosts: Math.max(0, p.totalPosts - 1),
+        recentPosts: p.recentPosts.filter((post) => post.id !== postId),
+      };
+    });
+  };
 
   const handleFollow = async () => {
     if (!getToken() || !profile) return;
@@ -65,6 +78,21 @@ const CreatorProfilePage = () => {
       <div className="creator-profile">
         {loading && <p className="creator-profile__loading">Loading profile…</p>}
         {error && <p className="creator-profile__error">{error}</p>}
+
+        {editingPost && (
+          <div className="creator-profile__composer-overlay">
+            <div className="creator-profile__composer-modal">
+              <PostComposer
+                editingPost={editingPost}
+                onPosted={(updatedPost) => {
+                  setEditingPost(null);
+                  fetchCreatorProfile(username).then(setProfile).catch(() => {});
+                }}
+                onClose={() => setEditingPost(null)}
+              />
+            </div>
+          </div>
+        )}
 
         {profile && (
           <>
@@ -186,7 +214,13 @@ const CreatorProfilePage = () => {
                   <p className="creator-profile__empty">No posts in this category yet.</p>
                 ) : (
                   filteredPosts.map((p) => (
-                    <CommunityPostCard key={p.id} post={p} onUpdate={() => fetchCreatorProfile(username).then(setProfile)} />
+                    <CommunityPostCard 
+                      key={p.id} 
+                      post={p} 
+                      onUpdate={() => fetchCreatorProfile(username).then(setProfile)} 
+                      onEdit={(post) => setEditingPost(post)}
+                      onDelete={handleDeletePost}
+                    />
                   ))
                 )}
               </section>

@@ -3,7 +3,7 @@ import { wakeBackend } from './wakeBackend';
 import { fetchOAuthStatus, getOAuthBlockers } from './oauthStatus';
 
 const HEALTH_TIMEOUT_MS = 2500;
-const MAX_WAKE_MS = 12000;
+const MAX_WAKE_MS = 45000;
 
 /**
  * Quick health ping — returns true if backend responds within timeout.
@@ -34,51 +34,63 @@ export function buildOAuthBeginUrl(provider, frontendOrigin = window.location.or
 }
 
 /**
- * Fast path: if backend is warm, redirect immediately. Otherwise wake up to MAX_WAKE_MS then redirect anyway.
+ * Fast path: if backend is warm, redirect immediately. Otherwise wake up to MAX_WAKE_MS then redirect.
+ * This function handles Render cold starts robustly by awaiting full health readiness before checking status configs
+ * and redirecting, preventing browser hangs and session timeout desyncs.
  */
 export async function startOAuthFlow(provider, { onProgress, onStatus } = {}) {
   const apiUrl = getApiUrl();
   const beginUrl = buildOAuthBeginUrl(provider);
 
   onStatus?.('Checking server...');
-  onProgress?.(12);
+  onProgress?.(10);
 
+  // Check if backend is already awake. We do a quick check first to avoid blocking on fetchOAuthStatus if asleep.
+  const alreadyUp = await quickHealthCheck(apiUrl, 1500);
+  
+  if (!alreadyUp) {
+    onStatus?.('Starting server (first visit may take a moment)...');
+    onProgress?.(15);
+
+    // Start polling health status
+    const wake = wakeBackend(apiUrl, MAX_WAKE_MS);
+    let tick = 15;
+    const progressInterval = setInterval(() => {
+      // Slowly advance progress towards 85% to indicate active startup
+      tick = Math.min(85, tick + (tick < 50 ? 5 : 2));
+      onProgress?.(tick);
+    }, 850);
+
+    const result = await wake;
+    clearInterval(progressInterval);
+
+    if (!result.ready) {
+      onStatus?.('Server took too long to start. Please try again.');
+      onProgress?.(0);
+      // Redirect back to login screen with a descriptive error
+      window.location.href = `/login?error=server_offline&provider=${provider}`;
+      return { redirected: false, warm: false };
+    }
+  }
+
+  // Once backend is confirmed active and stable, execute blocker configuration checks
+  onStatus?.('Verifying configurations...');
+  onProgress?.(90);
+  
   const blockers = await fetchOAuthStatus(apiUrl)
     .then((status) => getOAuthBlockers(status, provider, apiUrl))
     .catch(() => []);
 
   if (blockers.length > 0) {
-    const code = provider === 'github' ? 'invalid_client' : 'invalid_client';
+    const code = 'invalid_client';
     const detail = encodeURIComponent(blockers[0]);
     window.location.href = `/login?error=${encodeURIComponent(code)}&detail=${detail}&provider=${provider}`;
     return { redirected: false, blockers };
   }
 
-  const alreadyUp = await quickHealthCheck(apiUrl);
-  if (alreadyUp) {
-    onStatus?.('Opening sign in...');
-    onProgress?.(100);
-    window.location.href = beginUrl;
-    return { redirected: true, warm: true };
-  }
-
-  onStatus?.('Starting server (first visit may take a moment)...');
-  onProgress?.(25);
-
-  const wake = wakeBackend(apiUrl, MAX_WAKE_MS);
-  let tick = 25;
-  const progressInterval = setInterval(() => {
-    tick = Math.min(88, tick + 5);
-    onProgress?.(tick);
-  }, 500);
-
-  const result = await wake;
-  clearInterval(progressInterval);
-
+  onStatus?.('Opening secure sign-in...');
   onProgress?.(100);
-  onStatus?.(result.ready ? 'Opening sign in...' : 'Connecting...');
-
   await new Promise((r) => setTimeout(r, 200));
   window.location.href = beginUrl;
-  return { redirected: true, warm: result.ready };
+  return { redirected: true, warm: true };
 }

@@ -153,6 +153,9 @@ public class RedditApiClient {
                     : "https://www.reddit.com" + permalink;
 
             String selftext = data.path("selftext").asText("");
+            if ("[deleted]".equals(selftext) || "[removed]".equals(selftext)) {
+                continue;
+            }
             RedditImageResolver.ResolvedImage image = RedditImageResolver.resolve(data);
             List<String> imageUrls = new ArrayList<>();
             if (image.primaryUrl() != null) {

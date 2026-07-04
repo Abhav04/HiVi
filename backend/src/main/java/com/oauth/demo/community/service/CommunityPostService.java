@@ -11,6 +11,10 @@ import com.oauth.demo.community.repository.CommunityPostRepository;
 import com.oauth.demo.community.repository.CreatorProfileRepository;
 import com.oauth.demo.community.repository.PostBookmarkRepository;
 import com.oauth.demo.community.repository.PostMediaRepository;
+import com.oauth.demo.community.repository.PostLikeRepository;
+import com.oauth.demo.community.repository.PostCommentRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import com.oauth.demo.entity.User;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -28,10 +32,14 @@ import java.util.List;
 @Service
 public class CommunityPostService {
 
+    private static final Logger log = LoggerFactory.getLogger(CommunityPostService.class);
+
     private final CommunityPostRepository postRepository;
     private final CreatorProfileRepository profileRepository;
     private final PostBookmarkRepository bookmarkRepository;
     private final PostMediaRepository mediaRepository;
+    private final PostLikeRepository likeRepository;
+    private final PostCommentRepository commentRepository;
     private final CommunityMapper mapper;
     private final CommunityMediaStorageService mediaStorage;
 
@@ -40,12 +48,16 @@ public class CommunityPostService {
             CreatorProfileRepository profileRepository,
             PostBookmarkRepository bookmarkRepository,
             PostMediaRepository mediaRepository,
+            PostLikeRepository likeRepository,
+            PostCommentRepository commentRepository,
             CommunityMapper mapper,
             CommunityMediaStorageService mediaStorage) {
         this.postRepository = postRepository;
         this.profileRepository = profileRepository;
         this.bookmarkRepository = bookmarkRepository;
         this.mediaRepository = mediaRepository;
+        this.likeRepository = likeRepository;
+        this.commentRepository = commentRepository;
         this.mapper = mapper;
         this.mediaStorage = mediaStorage;
     }
@@ -177,7 +189,8 @@ public class CommunityPostService {
             Boolean draft,
             MultipartFile media,
             MultipartFile thumbnail,
-            MultipartFile[] mediaFiles
+            MultipartFile[] mediaFiles,
+            String keepMediaIds
     ) throws IOException {
         CommunityPost post = requireOwnedPost(author, postId);
         boolean wasDraft = post.getStatus() == PostStatus.DRAFT;
@@ -192,10 +205,68 @@ public class CommunityPostService {
             post.setStatus(draft ? PostStatus.DRAFT : PostStatus.PUBLISHED);
         }
 
-        if (mediaFiles != null && mediaFiles.length > 0 || (media != null && !media.isEmpty())) {
+        // Handle keeping/reordering and deleting of existing media items
+        List<PostMedia> existingMedia = new ArrayList<>(post.getMediaItems());
+        List<PostMedia> keptMedia = new ArrayList<>();
+
+        if (keepMediaIds != null) {
+            List<Long> keepIds = new ArrayList<>();
+            if (!keepMediaIds.isBlank()) {
+                for (String idStr : keepMediaIds.split(",")) {
+                    try {
+                        keepIds.add(Long.parseLong(idStr.trim()));
+                    } catch (NumberFormatException ignored) {}
+                }
+            }
+
+            // Identify which files to delete physically
+            for (PostMedia item : existingMedia) {
+                if (!keepIds.contains(item.getId())) {
+                    deletePhysicalFile(item.getMediaUrl());
+                    mediaRepository.delete(item);
+                }
+            }
+
+            // Reorder and collect the ones to keep
+            for (int i = 0; i < keepIds.size(); i++) {
+                Long keepId = keepIds.get(i);
+                for (PostMedia item : existingMedia) {
+                    if (item.getId().equals(keepId)) {
+                        item.setSortOrder(i);
+                        keptMedia.add(item);
+                        break;
+                    }
+                }
+            }
+
+            post.getMediaItems().clear();
+            post.getMediaItems().addAll(keptMedia);
+        } else if (mediaFiles != null && mediaFiles.length > 0 || (media != null && !media.isEmpty())) {
+            // If keepMediaIds is not sent but new files are, we replace all old files
+            deletePhysicalFiles(existingMedia);
             post.getMediaItems().clear();
             mediaRepository.deleteByPostId(post.getId());
-            applyUploadedMedia(post, author.getId(), media, thumbnail, mediaFiles);
+        }
+
+        // Apply new uploaded files
+        if (mediaFiles != null && mediaFiles.length > 0 || (media != null && !media.isEmpty())) {
+            int startOrder = post.getMediaItems().size();
+            applyUploadedMediaWithStartOrder(post, author.getId(), media, thumbnail, mediaFiles, startOrder);
+        }
+
+        // Keep post's main mediaUrl and thumbnailUrl synchronized with the first item in the gallery
+        if (!post.getMediaItems().isEmpty()) {
+            PostMedia first = post.getMediaItems().get(0);
+            post.setMediaUrl(first.getMediaUrl());
+            post.setThumbnailUrl(first.getThumbnailUrl());
+            if (first.getMediaKind() == PostMedia.MediaKind.VIDEO) {
+                post.setPostType(PostType.VIDEO);
+            } else if (first.getMediaKind() == PostMedia.MediaKind.IMAGE && post.getPostType() == PostType.TEXT) {
+                post.setPostType(PostType.IMAGE);
+            }
+        } else {
+            post.setMediaUrl(null);
+            post.setThumbnailUrl(null);
         }
 
         post.setUpdatedAt(LocalDateTime.now());
@@ -213,10 +284,23 @@ public class CommunityPostService {
     @CacheEvict(value = "community-feed", allEntries = true)
     public void deletePost(User author, Long postId) {
         CommunityPost post = requireOwnedPost(author, postId);
+        
+        // 1. Decrement post count if it was published
         if (post.getStatus() == PostStatus.PUBLISHED) {
             decrementProfilePostCount(author.getId());
         }
+
+        // 2. Delete physical files from disk
+        deletePhysicalFiles(post.getMediaItems());
+
+        // 3. Cascade delete database associations manually to satisfy foreign key constraints
+        commentRepository.deleteByPostIdAndParentIdIsNotNull(post.getId());
+        commentRepository.deleteByPostIdAndParentIdIsNull(post.getId());
+        likeRepository.deleteByPostId(post.getId());
+        bookmarkRepository.deleteByPostId(post.getId());
         mediaRepository.deleteByPostId(post.getId());
+
+        // 4. Finally delete the post
         postRepository.delete(post);
     }
 
@@ -291,6 +375,17 @@ public class CommunityPostService {
             MultipartFile thumbnail,
             MultipartFile[] mediaFiles
     ) throws IOException {
+        applyUploadedMediaWithStartOrder(post, userId, media, thumbnail, mediaFiles, 0);
+    }
+
+    private void applyUploadedMediaWithStartOrder(
+            CommunityPost post,
+            Long userId,
+            MultipartFile media,
+            MultipartFile thumbnail,
+            MultipartFile[] mediaFiles,
+            int startOrder
+    ) throws IOException {
         List<MultipartFile> files = new ArrayList<>();
         if (mediaFiles != null) {
             for (MultipartFile f : mediaFiles) {
@@ -301,7 +396,7 @@ public class CommunityPostService {
             files.add(media);
         }
 
-        int order = 0;
+        int order = startOrder;
         for (MultipartFile file : files) {
             if (order >= 10) break;
             CommunityMediaStorageService.StoredMedia stored = mediaStorage.store(file, userId);
@@ -335,6 +430,33 @@ public class CommunityPostService {
                     post.getMediaItems().get(0).setThumbnailUrl(thumb.thumbnailUrl());
                 }
             }
+        }
+    }
+
+    private void deletePhysicalFiles(List<PostMedia> items) {
+        if (items != null) {
+            for (PostMedia item : items) {
+                deletePhysicalFile(item.getMediaUrl());
+            }
+        }
+    }
+
+    private void deletePhysicalFile(String mediaUrl) {
+        try {
+            if (mediaUrl != null && mediaUrl.contains("/media/")) {
+                String[] parts = mediaUrl.split("/media/");
+                if (parts.length > 1) {
+                    String[] subParts = parts[1].split("/");
+                    if (subParts.length == 2) {
+                        String userIdStr = subParts[0];
+                        String filename = subParts[1];
+                        java.nio.file.Path filePath = mediaStorage.resolveMediaPath(userIdStr, filename);
+                        java.nio.file.Files.deleteIfExists(filePath);
+                    }
+                }
+            }
+        } catch (Exception ex) {
+            log.warn("Failed to delete media file from storage: {}", mediaUrl, ex);
         }
     }
 

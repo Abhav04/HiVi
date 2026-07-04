@@ -85,6 +85,45 @@ export async function createCommunityPost(formData) {
   return body;
 }
 
+export async function updateCommunityPost(postId, formData) {
+  const headers = getAuthHeaders(false);
+  delete headers['Content-Type'];
+  const res = await fetch(`${getApiUrl()}/api/community/posts/${postId}`, {
+    method: 'PATCH',
+    headers,
+    body: formData,
+  });
+  const body = await res.json().catch(() => ({}));
+  if (!res.ok) {
+    if (res.status === 401) {
+      clearInvalidToken();
+    }
+    const message = friendlyError(res.status, body, 'Could not update your post.');
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
+  }
+  return body;
+}
+
+export async function deleteCommunityPost(postId) {
+  const res = await fetch(`${getApiUrl()}/api/community/posts/${postId}`, {
+    method: 'DELETE',
+    headers: getAuthHeaders(),
+  });
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({}));
+    if (res.status === 401) {
+      clearInvalidToken();
+    }
+    const message = friendlyError(res.status, body, 'Could not delete your post.');
+    const err = new Error(message);
+    err.status = res.status;
+    throw err;
+  }
+  return true;
+}
+
 export async function toggleLike(postId) {
   const res = await fetch(`${getApiUrl()}/api/community/posts/${postId}/like`, {
     method: 'POST',

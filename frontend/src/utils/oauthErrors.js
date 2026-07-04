@@ -75,6 +75,12 @@ const ERROR_MAP = {
     message: 'Something went wrong on our server after provider sign-in.',
     action: 'Try again in a moment.',
   },
+  server_offline: {
+    type: 'user',
+    title: 'Server offline',
+    message: 'The server is temporarily taking too long to respond. Please try again in a few moments.',
+    action: 'Try signing in again.',
+  },
   invalid_grant: {
     type: 'user',
     title: 'Sign-in link expired',

@@ -22,4 +22,8 @@ public interface PostBookmarkRepository extends JpaRepository<PostBookmark, Long
             ORDER BY b.createdAt DESC
             """)
     Page<CommunityPost> findBookmarkedPosts(@Param("userId") Long userId, Pageable pageable);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM PostBookmark b WHERE b.post.id = :postId")
+    void deleteByPostId(@org.springframework.data.repository.query.Param("postId") Long postId);
 }

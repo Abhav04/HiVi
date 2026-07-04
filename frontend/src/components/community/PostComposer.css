@@ -98,32 +98,135 @@
   background: rgba(255, 120, 40, 0.1);
 }
 
-.post-composer-upload {
+/* Drag and Drop Zone */
+.post-composer-dropzone {
+  border: 2px dashed rgba(168, 85, 247, 0.25);
+  border-radius: 10px;
+  padding: 24px 16px;
+  text-align: center;
+  background: rgba(168, 85, 247, 0.02);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-bottom: 14px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  font-size: 12px;
-  color: var(--muted2);
-  margin-bottom: 12px;
-  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
 }
 
-.post-composer-upload input[type='file'] {
+.post-composer-dropzone:hover,
+.post-composer-dropzone.drag-active {
+  border-color: rgba(168, 85, 247, 0.6);
+  background: rgba(168, 85, 247, 0.07);
+}
+
+.post-composer-dropzone svg {
+  color: var(--gold);
+}
+
+.post-composer-dropzone p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.post-composer-dropzone span {
   font-size: 11px;
+  color: var(--muted2);
 }
 
-.post-composer-upload em {
-  color: #c4b5fd;
-  font-style: normal;
+/* Previews container */
+.post-composer-previews {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+  margin-bottom: 14px;
 }
 
-.post-composer-draft {
+.post-composer-preview-card {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #08080a;
+  border: 1px solid var(--border);
+}
+
+.post-composer-preview-media {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.post-composer-preview-remove {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.8);
+  color: var(--white);
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  justify-content: center;
   font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  z-index: 5;
+}
+
+.post-composer-preview-remove:hover {
+  background: #ef4444;
+}
+
+.post-composer-preview-controls {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  justify-content: space-between;
+  padding: 4px 6px;
+  z-index: 5;
+}
+
+.post-composer-preview-btn {
+  background: transparent;
+  border: none;
   color: var(--muted);
+  font-size: 12px;
+  cursor: pointer;
+  padding: 0 4px;
+  transition: color 0.2s ease;
+}
+
+.post-composer-preview-btn:hover:not(:disabled) {
+  color: var(--white);
+}
+
+.post-composer-preview-btn:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Progress bar */
+.post-composer-progress-container {
   margin-bottom: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  height: 6px;
+  overflow: hidden;
+}
+
+.post-composer-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold) 0%, #ffd4a8 100%);
+  width: 0%;
+  transition: width 0.3s ease;
 }
 
 .post-composer-error {

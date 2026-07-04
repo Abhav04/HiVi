@@ -1,12 +1,12 @@
-import React, { memo, useCallback, useState } from 'react';
+import React, { memo, useCallback, useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { mediaFullUrl, getToken } from '../../utils/auth';
 import { formatTimeAgo, getPostTypeMeta, creatorRole, formatCount } from '../../utils/communityFormat';
-import { toggleLike, toggleBookmark, fetchComments, addComment, recordPostView } from '../../services/communityApi';
+import { toggleLike, toggleBookmark, fetchComments, addComment, recordPostView, deleteCommunityPost } from '../../services/communityApi';
 import CreatorAvatar from './CreatorAvatar';
 import './CommunityPostCard.css';
 
-const CommunityPostCard = memo(function CommunityPostCard({ post, variant = 'feed', onUpdate }) {
+const CommunityPostCard = memo(function CommunityPostCard({ post, variant = 'feed', onUpdate, onEdit, onDelete }) {
   const [liked, setLiked] = useState(post.likedByMe);
   const [likeCount, setLikeCount] = useState(post.likeCount);
   const [bookmarked, setBookmarked] = useState(post.bookmarkedByMe);
@@ -14,12 +14,59 @@ const CommunityPostCard = memo(function CommunityPostCard({ post, variant = 'fee
   const [comments, setComments] = useState([]);
   const [commentText, setCommentText] = useState('');
   const [likeAnim, setLikeAnim] = useState(false);
+  const [currentSlide, setCurrentSlide] = useState(0);
+  const [showMenu, setShowMenu] = useState(false);
 
   const mediaUrl = mediaFullUrl(post.thumbnailUrl || post.mediaUrl);
   const isVideo = post.postType === 'VIDEO';
   const typeMeta = getPostTypeMeta(post.postType);
   const timeAgo = formatTimeAgo(post.createdAt);
   const role = creatorRole(post.author);
+
+  const mediaItems = post.mediaItems || [];
+
+  const handlePrevSlide = useCallback((e) => {
+    e.stopPropagation();
+    setCurrentSlide((prev) => Math.max(0, prev - 1));
+  }, []);
+
+  const handleNextSlide = useCallback((e) => {
+    e.stopPropagation();
+    setCurrentSlide((prev) => Math.min(mediaItems.length - 1, prev + 1));
+  }, [mediaItems.length]);
+
+  const toggleMenu = (e) => {
+    e.stopPropagation();
+    setShowMenu((v) => !v);
+  };
+
+  const handleEditClick = (e) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    onEdit?.(post);
+  };
+
+  const handleDeleteClick = async (e) => {
+    e.stopPropagation();
+    setShowMenu(false);
+    const confirmDelete = window.confirm("Are you sure you want to delete this post? This action cannot be undone.");
+    if (!confirmDelete) return;
+
+    try {
+      await deleteCommunityPost(post.id);
+      onDelete?.(post.id);
+      onUpdate?.();
+    } catch (err) {
+      alert(err.message || "Failed to delete post.");
+    }
+  };
+
+  useEffect(() => {
+    if (!showMenu) return;
+    const close = () => setShowMenu(false);
+    document.addEventListener('click', close);
+    return () => document.removeEventListener('click', close);
+  }, [showMenu]);
 
   React.useEffect(() => {
     recordPostView(post.id).catch(() => {});
@@ -119,6 +166,20 @@ const CommunityPostCard = memo(function CommunityPostCard({ post, variant = 'fee
             )}
           </p>
         </div>
+
+        {post.ownedByMe && !isCompact && (
+          <div className="feed-post__menu-wrap">
+            <button type="button" className="feed-post__menu-trigger" onClick={toggleMenu} aria-label="Post actions">
+              ⋮
+            </button>
+            {showMenu && (
+              <div className="feed-post__dropdown-menu">
+                <button type="button" onClick={handleEditClick}>Edit post</button>
+                <button type="button" className="feed-post__dropdown-delete" onClick={handleDeleteClick}>Delete post</button>
+              </div>
+            )}
+          </div>
+        )}
       </header>
 
       <div className="feed-post__body">
@@ -135,9 +196,71 @@ const CommunityPostCard = memo(function CommunityPostCard({ post, variant = 'fee
         )}
       </div>
 
-      {(mediaUrl || isFeatured) && (
-        <div className={`feed-post__media ${isFeatured ? 'feed-post__media--hero' : ''}`}>
-          {mediaUrl ? (
+      {/* Media Carousel or Single Media */}
+      {(mediaItems.length > 0 || mediaUrl || isFeatured) && (
+        <div className={`feed-post__media ${isFeatured ? 'feed-post__media--hero' : ''}`} onClick={(e) => e.stopPropagation()}>
+          {mediaItems.length > 1 ? (
+            <div className="feed-post__media-carousel">
+              <div 
+                className="feed-post__carousel-container"
+                style={{ transform: `translateX(-${currentSlide * 100}%)` }}
+              >
+                {mediaItems.map((item, idx) => (
+                  <div key={item.id || idx} className="feed-post__carousel-slide">
+                    {item.mediaKind === 'VIDEO' ? (
+                      <video
+                        src={mediaFullUrl(item.mediaUrl)}
+                        className="feed-post__video"
+                        controls
+                        preload="metadata"
+                        poster={mediaFullUrl(item.thumbnailUrl)}
+                      />
+                    ) : (
+                      <img src={mediaFullUrl(item.mediaUrl)} alt="" className="feed-post__image" loading="lazy" />
+                    )}
+                  </div>
+                ))}
+              </div>
+              
+              {currentSlide > 0 && (
+                <button type="button" className="feed-post__carousel-btn feed-post__carousel-btn--prev" onClick={handlePrevSlide}>
+                  ‹
+                </button>
+              )}
+              {currentSlide < mediaItems.length - 1 && (
+                <button type="button" className="feed-post__carousel-btn feed-post__carousel-btn--next" onClick={handleNextSlide}>
+                  ›
+                </button>
+              )}
+              
+              <div className="feed-post__carousel-dots">
+                {mediaItems.map((_, idx) => (
+                  <button
+                    key={idx}
+                    type="button"
+                    className={`feed-post__carousel-dot ${currentSlide === idx ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setCurrentSlide(idx);
+                    }}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+            </div>
+          ) : mediaItems.length === 1 ? (
+            mediaItems[0].mediaKind === 'VIDEO' ? (
+              <video
+                src={mediaFullUrl(mediaItems[0].mediaUrl)}
+                className="feed-post__video"
+                controls
+                preload="metadata"
+                poster={mediaFullUrl(mediaItems[0].thumbnailUrl)}
+              />
+            ) : (
+              <img src={mediaFullUrl(mediaItems[0].mediaUrl)} alt="" className="feed-post__image" loading="lazy" />
+            )
+          ) : mediaUrl ? (
             isVideo ? (
               <video
                 src={mediaFullUrl(post.mediaUrl)}

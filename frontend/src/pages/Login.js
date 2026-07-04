@@ -103,7 +103,7 @@ const Login = () => {
         type: 'auth',
         title: 'Sign in failed',
         message: err.message || 'Invalid email/username or password.',
-        action: 'Demo account (local): cinematic_maya / demo1234 — or use Google/GitHub once OAuth is configured.',
+        action: 'Please verify your credentials or continue with Google or GitHub.',
       });
     } finally {
       setLoading(false);
@@ -164,29 +164,6 @@ const Login = () => {
               <Link to="/signup" className="auth-link">create an account →</Link>
             </p>
           </div>
-
-          {oauthStatus?.googleRedirectUri?.includes('localhost') && !configError && !oauthError && (
-            <div className="oauth-local-hint" role="note">
-              <p>
-                <strong>Google OAuth client ID</strong> (must match Console):{' '}
-                <code>{oauthStatus.googleClientIdPrefix || 'see /oauth/status'}</code>
-              </p>
-              <p>
-                <strong>Authorized redirect URI</strong> (exact):{' '}
-                <code>{oauthStatus.googleRedirectUri}</code>
-              </p>
-              {oauthStatus.recommendedGoogleRedirectUris?.length > 1 && (
-                <p className="oauth-local-hint-sub">
-                  Same client should also list:{' '}
-                  <code>{oauthStatus.recommendedGoogleRedirectUris.find((u) => u.includes('onrender.com'))}</code>
-                </p>
-              )}
-              {oauthStatus.issues?.length > 0 && (
-                <p className="oauth-local-hint-warn">{oauthStatus.issues[0]}</p>
-              )}
-            </div>
-          )}
-
           <OAuthErrorCard
             error={configError || oauthError}
             onDismiss={() => {

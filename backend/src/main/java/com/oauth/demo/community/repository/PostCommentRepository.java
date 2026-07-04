@@ -12,4 +12,12 @@ public interface PostCommentRepository extends JpaRepository<PostComment, Long> 
     List<PostComment> findByParentIdOrderByCreatedAtAsc(Long parentId);
 
     long countByPostId(Long postId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM PostComment c WHERE c.post.id = :postId AND c.parent IS NOT NULL")
+    void deleteByPostIdAndParentIdIsNotNull(@org.springframework.data.repository.query.Param("postId") Long postId);
+
+    @org.springframework.data.jpa.repository.Modifying
+    @org.springframework.data.jpa.repository.Query("DELETE FROM PostComment c WHERE c.post.id = :postId AND c.parent IS NULL")
+    void deleteByPostIdAndParentIdIsNull(@org.springframework.data.repository.query.Param("postId") Long postId);
 }

@@ -81,15 +81,36 @@ const CommunityFeed = () => {
     return () => obs.disconnect();
   }, [hasMore, loading, loadingMore, mode, load]);
 
+  const [editingPost, setEditingPost] = useState(null);
+
+  const handleEditPost = (post) => {
+    setEditingPost(post);
+    setShowComposer(true);
+  };
+
+  const handleDeletePost = (postId) => {
+    setPosts((prev) => prev.filter((p) => p.id !== postId));
+    setFeatured((prev) => (prev && prev.id === postId ? null : prev));
+  };
+
+  const handleCloseComposer = () => {
+    setShowComposer(false);
+    setEditingPost(null);
+  };
+
   const handlePosted = (newPost) => {
     setShowComposer(false);
+    setEditingPost(null);
     setError(null);
     if (newPost && newPost.status !== 'DRAFT') {
       setPosts((prev) => {
         const exists = prev.some((p) => p.id === newPost.id);
-        return exists ? prev : [newPost, ...prev];
+        if (exists) {
+          return prev.map((p) => (p.id === newPost.id ? newPost : p));
+        }
+        return [newPost, ...prev];
       });
-      setFeatured((prev) => prev || newPost);
+      setFeatured((prev) => (prev && prev.id === newPost.id ? newPost : prev));
     }
     load(mode, 0, false);
   };
@@ -144,7 +165,7 @@ const CommunityFeed = () => {
 
           {showComposer && (
             <div className="community-composer-wrap">
-              <PostComposer onPosted={handlePosted} onClose={() => setShowComposer(false)} />
+              <PostComposer onPosted={handlePosted} onClose={handleCloseComposer} editingPost={editingPost} />
             </div>
           )}
 
@@ -173,7 +194,13 @@ const CommunityFeed = () => {
             {!loading && featured && (
               <section className="community-featured-block">
                 <p className="community-section-label">Featured creator work</p>
-                <CommunityPostCard post={featured} variant="featured" onUpdate={() => load(mode, 0, false)} />
+                <CommunityPostCard 
+                  post={featured} 
+                  variant="featured" 
+                  onUpdate={() => load(mode, 0, false)} 
+                  onEdit={handleEditPost}
+                  onDelete={handleDeletePost}
+                />
               </section>
             )}
 
@@ -186,6 +213,8 @@ const CommunityFeed = () => {
                     key={post.id}
                     post={post}
                     onUpdate={() => load(mode, 0, false)}
+                    onEdit={handleEditPost}
+                    onDelete={handleDeletePost}
                   />
                 ))}
 
